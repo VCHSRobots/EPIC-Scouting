@@ -1,0 +1,1 @@
+https://install.advancedrestclient.com/install
