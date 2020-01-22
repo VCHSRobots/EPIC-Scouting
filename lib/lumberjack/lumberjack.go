@@ -91,7 +91,7 @@ func (l *Lumberjack) Log(logLevel int, text string) {
 		header = "Fatal"
 	}
 	if header != "" {
-		header = fmt.Sprintf("%s[%s] %s ", l.prefix, header, now)
+		header = fmt.Sprintf("%s %s[%s] ", now, l.prefix, header)
 		logFileName := time.Now().Format("2006-01-02") + ".log"
 		logFile, errOpen := os.OpenFile(p+logFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		defer logFile.Close()
@@ -102,6 +102,7 @@ func (l *Lumberjack) Log(logLevel int, text string) {
 		splitLog := io.MultiWriter(logFile, os.Stdout)
 		l.SetOutput(splitLog)
 		l.mx.Lock() // Lock access to logger variables.
+		l.buf = l.buf[:0]
 		l.buf = append(l.buf, header...)
 		l.buf = append(l.buf, text...)
 		if len(text) == 0 || text[len(text)-1] != '\n' {
@@ -113,8 +114,6 @@ func (l *Lumberjack) Log(logLevel int, text string) {
 			fmt.Fprintf(os.Stderr, "Unable to write to log file: %s", errWrite.Error())
 			os.Exit(1)
 		}
-	} else {
-		l.Errorf("Impossible logLevel %s used for log message %s", logLevel, text)
 	}
 }
 

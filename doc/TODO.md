@@ -10,12 +10,11 @@
    - [X] Leveled logging
    - [X] Thread-safe
    - [X] Module-specific loggers
-   - [ ] Integrate Gin log messages under their appropriate logLevels
+   - [ ] Integrate Gin log messages under their appropriate logLevels with *lumberjack*
  - [ ] Database interaction module
  - [ ] Authentication middleware
  - [ ] Gin router
  - [ ] Task scheduler daemon
- - [ ] HTTPS cert and encryption as a default
  - [ ] *Low priority:* GZIP served page data to save bandwidth
  - [ ] *Low priority:* Allow reloading of configuration without rebooting by sysadmins
  - [ ] Feature-complete API
@@ -51,8 +50,8 @@
 
 ### Backend
 
- - [ ] Lorem ipsum
- - [ ] Dolor sit amet
+ - [ ] HTTPS cert and encryption as a default
+ - [ ] Lorem Ipsum
  - [ ] Foo bar baz
 
 ### Frontend

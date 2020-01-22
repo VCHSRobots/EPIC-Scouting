@@ -15,8 +15,7 @@ It must be placed in the same directory as the scouting system's executable. Its
 
 ### Optional
 
- - `PortAPI`: The port for the API. `443` by default.
- - `PortHTTP`: The port for the frontend webserver. `443` by default.
+ - `PortAPI`: The port for the server. `443` by default.
  - `TBAAuthKey`: A user's authentication key for [The Blue Alliance's](https://www.thebluealliance.com) API. Required to pull data from there.
  - `Verbosity`:
    - `-3`: only record `Fatal` log entries.
@@ -24,5 +23,5 @@ It must be placed in the same directory as the scouting system's executable. Its
    - `-1`: only record `Warn`, `Error`, or `Fatal` entries. 
    - `0`: the default setting. Record `Info`, `Warn`, `Error`, and `Fatal` entries.
    - `1`: enable `Debug` messages and nanosecond timestamps for all entries.
- - `DatabaseBackupLocation`: The location for database backups. If this is a web address or IP, the scouting server will attempt to use SFTP to upload the database files. `Null` by default.
+ - `DatabaseBackupPath`: The location for database backups. If this is a web address or IP, the scouting server will attempt to use SFTP to upload the database files. `Null` by default.
  - `DatabaseBackupFrequency`: A positive integer; time expressed as seconds. For example, 86400 would be equivalent to once every 24 hours. Values less than or equal to `0` disable backups. `604800` by default.

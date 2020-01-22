@@ -34,10 +34,13 @@ func init() {
 
 // YAML describes the structure of the YAML configuration file. See https://godoc.org/gopkg.in/yaml.v3#Marshal for more information.
 type YAML struct {
-	DatabasePath string `yaml:"DatabasePath"`
-	LogPath      string `yaml:"LogPath"`
-	TBAAuthKey   string `yaml:"TBAAuthKey"`
-	Verbosity    int    `yaml:"Verbosity"`
+	DatabaseBackupFrequency string `yaml:"DatabaseBackupFrequency"`
+	DatabaseBackupPath      string `yaml:"DatabaseBackupPath"`
+	DatabasePath            string `yaml:"DatabasePath"`
+	LogPath                 string `yaml:"LogPath"`
+	Port                    int    `yaml:"Port"`
+	TBAAuthKey              string `yaml:"TBAAuthKey"`
+	Verbosity               int    `yaml:"Verbosity"`
 }
 
 /*
