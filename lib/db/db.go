@@ -1,6 +1,4 @@
-/*
-Package db provides tools for creating and interacting with the SQLite databases.
-*/
+/*Package db provides tools for creating and interacting with the SQLite databases.*/
 package db
 
 import (
@@ -21,7 +19,6 @@ Its name is a play on the GNU program "touch", the idiom "[to] touch base", and 
 */
 func TouchBase(databasePath string) {
 	newDatabase := func(databaseName string) (database *sql.DB) {
-		var err error
 		db, err := sql.Open("sqlite3", databasePath+databaseName+".db")
 		if err != nil {
 			log.Fatal("Unable to open or create database: " + err.Error())
@@ -38,7 +35,7 @@ func TouchBase(databasePath string) {
 	// This database stores all users.
 
 	users := newDatabase("users")
-	users.Exec("CREATE TABLE IF NOT EXISTS users ( userid TEXT PRIMARY KEY UNIQUE NOT NULL, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, firstname TEXT, lastname TEXT, email TEXT UNIQUE, phone TEXT UNIQUE)") // TODO: Add support for N+ contact options; via linked table?
+	users.Exec("CREATE TABLE IF NOT EXISTS users ( userid TEXT PRIMARY KEY UNIQUE NOT NULL, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, firstname TEXT, lastname TEXT, email TEXT UNIQUE, phone TEXT UNIQUE usertype TEXT)") // TODO: Add support for N+ contact options; via linked table?
 
 	// TODO: Create a SYSTEM team which makes the default public campaigns each season.
 
@@ -60,7 +57,6 @@ func TouchBase(databasePath string) {
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS participants ( matchid TEXT PRIMARY KEY NOT NULL, competitorid TEXT UNIQUE NOT NULL) ")                                                   // The participants in each match.
 
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS competitors ( competitorid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL )") // TODO: Add more information about each competing team.
-
 }
 
 /*
@@ -72,10 +68,18 @@ func CreateUser(username, password, firstname, lastname, email, phone string) {
 	// Throw if overwriting existing
 }
 
+func CreateEvent(name, userid, teamid, campaignid string) {
+	//TODO: Adds event to campaign table
+}
+
+func CreateMatch(name, userid, teamid, eventid, campaignid string) {
+	//TODO: Adds a match to a campaign
+}
+
 /*
 CreateTeam TODO
 */
-func CreateTeam() {
+func CreateTeam(number, userid string) {
 	// TODO
 	// Req: TeamNumber, TeamName, etc
 	// Throw if existing. If a team's number exists in campaigns/competitors, their competitorid is their new teamid. If a team's number exists in teams/teams, any reference to their competitorid in campaigns/competitors is their teamid.
@@ -92,15 +96,16 @@ func Results() {
 /*
 GetCampaigns global or team.
 */
-func GetCampaigns() {
+func GetCampaigns(campaignid, id, teamid string) {
 	// TODO: Load a list of global or team-specific campaigns. Check perms for the latter.
 }
 
 /*
 CreateCampaign TODO.
 */
-func CreateCampaign() {
-	// TODO: Clone global campaigns to team-specific campaign if requested. Only sysadmin can create global campaigns.
+func CreateCampaign(name, id, teamid string, global bool) *sql.DB {
+	// TODO: Clone global campaigns to team-specific campaign if requested.
+	// Only sysadmin can create global campaigns.
 	id := uuid.New()
 	log.Debugf("Created campaign %s", id)
 }
@@ -108,13 +113,13 @@ func CreateCampaign() {
 /*
 WorkCampaign TODO.
 */
-func WorkCampaign() {
+func WorkCampaign(teamid, id, campaignid string) {
 	// TODO: Set a team to work on a campaign. Check perms.
 }
 
 /*
 CreateCompetitor TODO
 */
-func CreateCompetitor() {
-	// TODO: Create a competitor in campaigns.
+func CreateCompetitor(number, id, campaignid string) {
+	// TODO: Create a scouted competitor in campaigns.
 }
