@@ -1,7 +1,9 @@
-{{ template "header.tmpl" }}
+{{ template "header" }}
+<div class="menuBar">
+<p>
+<a href="/about/">About</a>{{if eq .UserMode "guest"}} | <a href="/login/">Login</a> | <a href="/register/">Register</a>{{end}}
+</p>
+</div>
 <img src="/media/construction.gif"></img>
-<h1>{{ .title }}</h1>
-<a href="/about/">About</a>
-<a href="/login/">Login</a>
-<a href="/register/">Register</a>
-{{ template "footer.tmpl" }}
+<p style="position: absolute; bottom: 0;">Build {{.Build}}</p>
+{{ template "footer" }}

@@ -93,3 +93,15 @@
 ## 2020-04-15 - 18: FIRST Championship at Houston
 
  - [ ] You have lost [The Game](https://en.wikipedia.org/wiki/The_Game_(mind_game))
+
+## FUTURE
+
+ - [ ] Move `pages.go` under `/lib/`
+ - [ ] Split the front-end and back-end API into two separate servers
+ - [ ] Allow for creating custom campaigns and match conditions via YAML and SVGs
+ - [ ] Allow for custom weighting algorithms
+ - [ ] Use a different database system?
+
+## YESTERDAY
+
+ - [ ] RACE CONDITION: calls to `lumberjack` in package `web` need to have log location `p` set or the multiwriter `splitLog` will fail! However: package `web` is called by every page in `pages` via `web.RegisterPage()`. This is an issue because the configuration isn't loaded until `main.main()` runs `configuration = config.Load()`. *SOLUTION*: `lumberjack` needs to load config independently.

@@ -4,7 +4,7 @@ import (
 	"EPIC-Scouting/lib/config"
 	"EPIC-Scouting/lib/db"
 	"EPIC-Scouting/lib/lumberjack"
-	"EPIC-Scouting/pages"
+	"EPIC-Scouting/routes"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,14 +17,13 @@ import (
 
 var configuration config.YAML
 var router *gin.Engine
-var buildName string = "Prerelease 0.1" // TODO: Update this with each release. "Prerelease" for development versions.
-var buildDate string = "20.021.1"       // TODO: Update this with each release. External script updates number and it is sourced from an external file. Format: YY.DDD.N, where YY is year, DDD is day of year, and N is build number in day.
 
 func main() {
 	configuration = config.Load()
 	db.TouchBase(configuration.DatabasePath)
 	lumberjack.Start(configuration.LogPath, configuration.Verbosity)
 	log := lumberjack.New("Main")
+	buildName, buildDate := config.BuildInformation()
 	log.Infof("Scouting system started. Version: %s (%s)", buildName, buildDate)
 	go start(configuration.Port)
 	// Graceful shutdown.
@@ -60,24 +59,24 @@ func start(port int) {
 	// TODO END
 
 	router = gin.New()
-	router.Use(gin.Logger())
-	router.Static("/css", "./static/css") // TODO: Make URL access to /css/, /js/, /media/, and /templates/ use the proper NoRoute() handler and NOT http.404, as it currently just returns a blank page.
+	router.Use(gin.Logger(), gin.Recovery()) // TODO: Add recovery middleware and authentication middle which refreshes session tokens.
+	router.Static("/css", "./static/css")    // TODO: Make URL access to /css/, /js/, /media/, and /templates/ use the proper NoRoute() handler and NOT http.404, as it currently just returns a blank page.
 	router.Static("/js", "./static/js")
 	router.Static("/media", "./static/media")
 	router.Static("/templates", "./static/templates")
 	router.LoadHTMLGlob("./static/templates/*") // Load templates
 	router.NoRoute(func(c *gin.Context) { c.HTML(http.StatusNotFound, "404.tmpl", nil) })
 	router.NoMethod(func(c *gin.Context) { c.HTML(http.StatusMethodNotAllowed, "405.tmpl", nil) })
-	pageList := pages.GetPages()
-	for _, page := range pageList {
-		if page.Verb == pages.VerbGET {
-			router.GET(page.Route, page.Handlers...)
-		}
-		if page.Verb == pages.VerbPOST {
-			router.POST(page.Route, page.Handlers...)
-		}
-	}
-	log.Debugf("Loaded %d pages.", len(pageList))
+	// TODO: Add handlers for 401, 403, 500 codes.
+	// TODO: Dynamically load routes from files in "/routes/" instead of hard-coding them.
+	router.GET("/", routes.Index)
+	router.GET("/about", routes.About)
+	router.GET("/login", routes.Login)
+	router.POST("/login", routes.LoginPOST)
+	router.GET("/register", routes.Register)
+	router.GET("/scout", routes.Scout)
+	router.GET("/dashboard", routes.Dashboard)
+	router.GET("/sysadmin", routes.SysAdmin)
 	log.Debugf("Serving on port %d.", port)
 	log.Fatal(router.Run(address))
 }
