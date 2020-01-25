@@ -24,44 +24,51 @@ func httpGet(url, dir, querystring string) *http.Response {
 	return nil
 }
 
-func keyIsWorking() bool {
-	if getStatus().Status == "200 OK" {
+//KeyIsWorking checks if error code status is okay, which indicates the auth key is valid
+func KeyIsWorking() bool {
+	if GetStatus().Status == "200 OK" {
 		return true
 	}
 	return false
 }
 
-func getStatus() *http.Response {
+//GetStatus - Gets TBA API Status
+func GetStatus() *http.Response {
 	dir := "/status"
 	resp := httpGet(tba, dir, keystring)
 	return resp
 }
 
-func getMatch(match string) *http.Response {
+//GetMatch gets match data including participating teams and results
+func GetMatch(match string) *http.Response {
 	dir := fmt.Sprintf("/match/%s", match)
 	resp := httpGet(tba, dir, keystring)
 	return resp
 }
 
-func getEventTeams(event string) *http.Response {
+//GetEventTeams gets which teams are at an event
+func GetEventTeams(event string) *http.Response {
 	dir := fmt.Sprintf("/event/%s/teams", event)
 	resp := httpGet(tba, dir, keystring)
 	return resp
 }
 
-func getEventMatches(event string) *http.Response {
+//GetEventMatches gets a list of matches at an event
+func GetEventMatches(event string) *http.Response {
 	dir := fmt.Sprintf("/event/%s/matches", event)
 	resp := httpGet(tba, dir, keystring)
 	return resp
 }
 
-func getTeamMatches(team, year string) *http.Response {
+//GetTeamMatches gets all matches a team was involved in
+func GetTeamMatches(team, year string) *http.Response {
 	dir := fmt.Sprintf("/team/%s/matches%s", team, year)
 	resp := httpGet(tba, dir, keystring)
 	return resp
 }
 
-func getTeamEvents(team string) *http.Response {
+//GetTeamEvents gets all events a team was involved in
+func GetTeamEvents(team string) *http.Response {
 	dir := fmt.Sprintf("/team/%s/events", team)
 	resp := httpGet(tba, dir, keystring)
 	return resp
