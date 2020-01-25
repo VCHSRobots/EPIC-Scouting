@@ -38,7 +38,7 @@ func TouchBase(databasePath string) {
 	// This database stores all users.
 
 	users := newDatabase("users")
-	users.Exec("CREATE TABLE IF NOT EXISTS users ( userid TEXT PRIMARY KEY UNIQUE NOT NULL, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, firstname TEXT, lastname TEXT, email TEXT UNIQUE, phone TEXT UNIQUE)") // TODO: Add support for N+ contact options; via linked table?
+	users.Exec("CREATE TABLE IF NOT EXISTS users ( userid TEXT PRIMARY KEY UNIQUE NOT NULL, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, firstname TEXT, lastname TEXT, email TEXT UNIQUE, phone TEXT UNIQUE, usertype TEXT)") // TODO: Add support for N+ contact options; via linked table?
 
 	// TODO: Create a SYSTEM team which makes the default public campaigns each season.
 
@@ -46,7 +46,7 @@ func TouchBase(databasePath string) {
 
 	teams := newDatabase("teams")
 	teams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL, currentcampaign TEXT NOT NULL )")                                                                              // A team.
-	teams.Exec("CREATE TABLE IF NOT EXISTS members ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL, usertype TEXT NOT NULL )")                                                                                                            // The members on a team.
+	teams.Exec("CREATE TABLE IF NOT EXISTS members ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL, usertype TEXT NOT NULL )")                                                                                                            // The members on a team. UserType is either member or admin.
 	teams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL )")                                                                                                                             // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
 	teams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL, stats )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
 
@@ -54,7 +54,7 @@ func TouchBase(databasePath string) {
 	// This database stores the expected campaign / event / match schedule and data, and expected competing teams. Data pulled from TBA.
 
 	campaigns := newDatabase("campaigns")
-	campaigns.Exec("CREATE TABLE IF NOT EXISTS campaigns ( campaignid TEXT PRIMARY KEY UNIQUE NOT NULL, owner TEXT NOT NULL, name TEXT NOT NULL )")                                      // TODO: Add more information about each campaign. Campaign owner is a teamid.
+	campaigns.Exec("CREATE TABLE IF NOT EXISTS campaigns ( campaignid TEXT PRIMARY KEY UNIQUE NOT NULL, owner TEXT NOT NULL, name TEXT NOT NULL )")                                      // TODO: Add more information about each campaign. Campaign owner is a teamid. If campaign owner is all zeros, campaign is global.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS events ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, name TEXT NOT NULL, location TEXT, starttime TEXT, endtime TEXT )") // TODO: Add more information about each event.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS matches ( eventid TEXT PRIMARY KEY NOT NULL, matchid TEXT UNIQUE NOT NULL, matchnumber INTEGER NOT NULL, starttime TEXT, endtime TEXT )") // TODO: Add more information about each match.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS participants ( matchid TEXT PRIMARY KEY NOT NULL, competitorid TEXT UNIQUE NOT NULL) ")                                                   // The participants in each match.
@@ -84,8 +84,8 @@ func CreateTeam() {
 /*
 Results TODO
 */
-func Results() {
-	// TODO
+func WriteResults() {
+	// TOD	O
 	// Throw if overwriting existing
 }
 

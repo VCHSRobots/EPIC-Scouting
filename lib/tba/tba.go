@@ -1,5 +1,7 @@
-/*Package tba manages communication with the The Blue Alliance's API.
-See https://www.thebluealliance.com/apidocs for more information.*/
+/*
+Package tba manages communication with the The Blue Alliance's API.
+See https://www.thebluealliance.com/apidocs for more information.
+*/
 package tba
 
 import (
@@ -7,8 +9,8 @@ import (
 	"net/http"
 )
 
-//Putting authentication key variable here until it can get connected to the config file
-//All request functions return a Response struct. Docs can be found at https://golang.org/src/net/http/response.go
+// Putting authentication key variable here until it can get connected to the config file.
+// All request functions return a Response struct. Docs can be found at https://golang.org/src/net/http/response.go.
 const tba string = "https://www.thebluealliance.com/api/v3"
 const keyfield string = "X-TBA-Auth-Key="
 const keystring string = "?X-TBA-Auth-Key=eSMjxo253BoTGFoaeZteq7wF1pGLGnZw24aaHxfvfsvF7VvNaTLOf7ZlvhbbJQxs"
@@ -17,7 +19,7 @@ var enabled bool
 
 func httpGet(url, dir, querystring string) *http.Response {
 	resp, err := http.Get(fmt.Sprintf("%s%s%s", tba, dir, querystring))
-	//Return nil if get fails
+	// Return nil if GET fails.
 	if err == nil {
 		return resp
 	}
