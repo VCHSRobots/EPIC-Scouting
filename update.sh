@@ -6,7 +6,7 @@ echo "[update.sh] Building."
 
 echo "[update.sh] Latest build number is"
 
-echo $(date +"%F %T.%N") > .latest-build
+echo $(date +"%Y.%j") > .latest-build
 
 env CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=7 go build -v
 

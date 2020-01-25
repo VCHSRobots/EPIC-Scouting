@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	// Golint needs to stop complaining about this import.
+	// TODO: Golint needs to stop complaining about this import. >:[
 	_ "github.com/mattn/go-sqlite3"
 )
 

@@ -44,6 +44,15 @@ type YAML struct {
 }
 
 /*
+BuildInformation returns the build name and date.
+*/
+func BuildInformation() (buildName, buildDate string) {
+	buildName = "Prerelease 0.1" // TODO: Update this with each release. "Prerelease" for development versions, "Release" for production versions.
+	buildDate = "2020.025.1"     // TODO: Update this with each release. External script updates number and it is sourced from an external file. Format: YYYY.DDD.N
+	return
+}
+
+/*
 Load configuration values from "config.yaml".
 */
 func Load() YAML {

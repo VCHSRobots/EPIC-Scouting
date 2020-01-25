@@ -1,0 +1,22 @@
+body {
+    background-color: #eceff1;
+    margin: auto;
+}
+
+p {
+    margin: 6px;
+}
+
+.menuBar {
+    background-color: #aaaaaa;
+    margin: 10 10 10 10;
+    border: 1px solid #000000;
+}
+
+img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+}
