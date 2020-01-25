@@ -68,10 +68,12 @@ func CreateUser(username, password, firstname, lastname, email, phone string) {
 	// Throw if overwriting existing
 }
 
+//CreateEvent adds an event to the event table in the campaigns database
 func CreateEvent(name, userid, teamid, campaignid string) {
 	//TODO: Adds event to campaign table
 }
 
+//CreateMatch adds a mach to the match table in the campaign database
 func CreateMatch(name, userid, teamid, eventid, campaignid string) {
 	//TODO: Adds a match to a campaign
 }
@@ -96,14 +98,14 @@ func Results() {
 /*
 GetCampaigns global or team.
 */
-func GetCampaigns(campaignid, id, teamid string) {
+func GetCampaigns(campaignid, userid, teamid string) {
 	// TODO: Load a list of global or team-specific campaigns. Check perms for the latter.
 }
 
 /*
 CreateCampaign TODO.
 */
-func CreateCampaign(name, id, teamid string, global bool) *sql.DB {
+func CreateCampaign(name, userid, teamid string, global bool) {
 	// TODO: Clone global campaigns to team-specific campaign if requested.
 	// Only sysadmin can create global campaigns.
 	id := uuid.New()
@@ -113,13 +115,13 @@ func CreateCampaign(name, id, teamid string, global bool) *sql.DB {
 /*
 WorkCampaign TODO.
 */
-func WorkCampaign(teamid, id, campaignid string) {
+func WorkCampaign(teamid, userid, campaignid string) {
 	// TODO: Set a team to work on a campaign. Check perms.
 }
 
 /*
 CreateCompetitor TODO
 */
-func CreateCompetitor(number, id, campaignid string) {
+func CreateCompetitor(number, userid, campaignid string) {
 	// TODO: Create a scouted competitor in campaigns.
 }
