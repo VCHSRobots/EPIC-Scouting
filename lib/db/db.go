@@ -4,6 +4,7 @@ package db
 import (
 	"EPIC-Scouting/lib/lumberjack"
 	"database/sql"
+	"fmt"
 	"os"
 
 	"github.com/google/uuid"
@@ -13,14 +14,23 @@ import (
 
 var log = lumberjack.New("DB")
 
+const databasePath string = "bases/"
+
+func main() {
+	TouchBase("./bases/")
+	//CreateUser("./bases/", "0000000", "hello", "world", "4415", "Hello", "World", "hello@world.com", "000-000-0000", "sysadmin")
+	_, _ = CheckLogin("hello", "world")
+}
+
 /*
 TouchBase creates all databases used by the server if they do not exist.
 Its name is a play on the GNU program "touch", the idiom "[to] touch base", and the word "database". The author is rather proud of this.
 */
 func TouchBase(databasePath string) {
-	newDatabase := func(databaseName string) (database *sql.DB) {
+	newDatabase := func(databaseName string) *sql.DB {
 		db, err := sql.Open("sqlite3", databasePath+databaseName+".db")
 		if err != nil {
+			print(databaseName)
 			log.Fatal("Unable to open or create database: " + err.Error())
 		}
 		return db
@@ -33,7 +43,6 @@ func TouchBase(databasePath string) {
 
 	// Users
 	// This database stores all users.
-
 	users := newDatabase("users")
 	users.Exec("CREATE TABLE IF NOT EXISTS users ( userid TEXT PRIMARY KEY UNIQUE NOT NULL, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, firstname TEXT, lastname TEXT, email TEXT UNIQUE, phone TEXT UNIQUE, usertype TEXT)") // TODO: Add support for N+ contact options; via linked table?
 
@@ -60,29 +69,294 @@ func TouchBase(databasePath string) {
 }
 
 /*
+CheckLogin checks if a user has a valid login and returns their data (sans their password) if they do
+*/
+func CheckLogin(username, password string) (bool, []string) {
+	users, err := sql.Open("sqlite3", "bases/users.db")
+	if err != nil {
+		log.Fatal("Unable to open database: " + err.Error())
+	}
+	usernames := processQuery(users.Query("SELECT username FROM users"))
+	passwords := processQuery(users.Query("SELECT password FROM users"))
+	//TODO: Make this check hashes for all people with the same username. This may or may not be added.
+	checkhash := correlateFields(username, usernames, passwords)
+	//TODO: Hash password for check
+	hash := password
+	userinfo := make([]string, 6)
+	if hash == checkhash {
+		userind := -1
+		for ind, user := range usernames {
+			if user == username {
+				userind = ind
+				break
+			}
+		}
+		if userind == -1 {
+			//this should only happen if something went terribly wrong - username was already checked at this point
+			return false, userinfo
+		}
+		firstnames := processQuery(users.Query("SELECT firstname FROM users"))
+		lastnames := processQuery(users.Query("SELECT lastname FROM users"))
+		emails := processQuery(users.Query("SELECT email FROM users"))
+		phones := processQuery(users.Query("SELECT phone FROM users"))
+		usertypes := processQuery(users.Query("SELECT usertype FROM users"))
+		userinfo = append(userinfo, username, firstnames[userind], lastnames[userind], emails[userind], phones[userind], usertypes[userind])
+		return true, userinfo
+	}
+	return false, userinfo
+}
+
+/*
 CreateUser creates a new user.
 */
-func CreateUser(username, password, firstname, lastname, email, phone string) {
+func CreateUser(databasePath, agentid, username, password, team, firstname, lastname, email, phone, usertype string) {
+	users, err := sql.Open("sqlite3", databasePath+"users.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
 	id := uuid.New()
-	log.Debugf("Created user: %s", id.String())
-	// Throw if overwriting existing
+	fmt.Println(id)
+	//TODO: Add password hashing
+	_, err = users.Exec(fmt.Sprintf("INSERT INTO users (userid, username, password, firstname, lastname, email, phone, usertype) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');", fmt.Sprint(id), username, password, firstname, lastname, email, phone, usertype))
+	// Throw if doing something illegal, such as overwriting existing user
+	if err != nil {
+		log.Fatal("Unable to create user: " + err.Error())
+	}
+	log.Debugf("Created user: '%s'", id.String())
 }
 
-func CreateEvent(name, userid, teamid, campaignid string) {
-	//TODO: Adds event to campaign table
+/*
+CreateCampaign TODO.
+*/
+func CreateCampaign(databasePath, agentid, owner, name string) {
+	// TODO: Clone global campaigns to team-specific campaign if requested.
+	// Only sysadmin can create global campaigns.
+	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	//Check if user is authorized to create campaigns
+	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	usertype := checkUserType(agentid, usersDb)
+	if (owner == "globalowner" && usertype != "sysadmin") || (usertype == "invalid") {
+		log.Info("Unauthorized attempt to create global database. User ID: " + agentid)
+		return
+	}
+	id := uuid.New()
+	_, err = campaigns.Exec(fmt.Sprintf("INSERT INTO campaigns (campaignid, owner, name) VALUES ('%s', '%s', '%s');", id, owner, name))
+	// Throw if doing something illegal, such as overwriting existing
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+	}
+	log.Debugf("Created campaign '%s'", id)
 }
 
-func CreateMatch(name, userid, teamid, eventid, campaignid string) {
+//CreateMatch adds a mach to the match table in the campaign database
+func CreateMatch(databasePath, agentid, eventid, matchnumber, starttime, endtime string) {
 	//TODO: Adds a match to a campaign
+	//TODO: Adds event to campaign table
+	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	//Check to see the team who owns the match's campaign tied to the event the match is connected to. If the campaign is not write accessable to the agent, deny access
+	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	usertype := checkUserType(agentid, usersDb)
+	userteam := checkUserTeam(agentid, usersDb)
+	campaignid := getEventCampaign(eventid, campaigns)
+	campaignowner := getCampaignOwner(campaignid, campaigns)
+	//TODO: get real globalowner name here
+	if (campaignowner != "globalowner" && campaignowner != userteam) || (usertype == "invalid") {
+		log.Info(fmt.Sprintf("Unauthorized attempt to create match in event ID %s in campaign %s. User ID: %s", eventid, campaignid, agentid))
+		return
+	}
+	id := uuid.New()
+	_, err = campaigns.Exec(fmt.Sprintf("INSERT INTO matches (matchid, eventid, matchnumber, starttime, endtime) VALUES ('%s', '%s', '%s', '%s', '%s');", id, eventid, matchnumber, starttime, endtime))
+	// Throw if doing something illegal, such as overwriting existing
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+	}
+	log.Debugf("Created match: '%s'", id.String())
+}
+
+//CreateEvent adds an event to the event table in the campaigns database
+func CreateEvent(databasePath, agentid, campaignid, name, location, starttime, endtime string) {
+	//TODO: Adds event to campaign table
+	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	//Check to see if agent has write access to the campaign. If not, deny access
+	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	usertype := checkUserType(agentid, usersDb)
+	userteam := checkUserTeam(agentid, usersDb)
+	campaignowner := getCampaignOwner(campaignid, campaigns)
+	//TODO: get real globalowner name here
+	if (campaignowner != "globalowner" && campaignowner != userteam) || (usertype == "invalid") {
+		log.Info(fmt.Sprintf("Unauthorized attempt to add event to campaign ID %s. User ID: %s", campaignid, agentid))
+		return
+	}
+	id := uuid.New()
+	_, err = campaigns.Exec(fmt.Sprintf("INSERT INTO events (eventid, campaignid, name, location, starttime, endtime) VALUES ('%s', '%s', '%s', '%s', '%s', '%s');", id, campaignid, name, location, starttime, endtime))
+	// Throw if doing something illegal, such as overwriting existing
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+	}
+	log.Debugf("Created event: '%s'", id.String())
 }
 
 /*
 CreateTeam TODO
 */
-func CreateTeam(number, userid string) {
+func CreateTeam(databasePath, agentid, number, name, currentcampaign string) {
 	// TODO
 	// Req: TeamNumber, TeamName, etc
-	// Throw if existing. If a team's number exists in campaigns/competitors, their competitorid is their new teamid. If a team's number exists in teams/teams, any reference to their competitorid in campaigns/competitors is their teamid.
+	//TODO: Adds event to campaign table
+	teams, err := sql.Open("sqlite3", databasePath+"teams.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	//Check to see if agent is a valid user
+	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	usertype := checkUserType(agentid, usersDb)
+	if usertype == "invalid" {
+		log.Info(fmt.Sprintf("Unauthorized user %s attempted to create team %s: %s", agentid, number, name))
+		return
+	}
+	id := uuid.New()
+	_, err = teams.Exec(fmt.Sprintf("INSERT INTO teams (teamid, number, name, currentcampaign) VALUES ('%s', '%s', '%s', '%s');", id, number, name, currentcampaign))
+	// Throw if doing something illegal, such as overwriting existing
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+	}
+	log.Debugf("Created team: %s", id.String())
+	// If a team's number exists in campaigns/competitors, their competitorid is their new teamid. If a team's number exists in teams/teams, any reference to their competitorid in campaigns/competitors is their teamid.
+	retconCompetitorID(number, fmt.Sprint(id), databasePath)
+}
+
+/*
+CreateCompetitor TODO
+*/
+func CreateCompetitor(databasePath, agentid, number, name string) {
+	// TODO: Create a scouted competitor in campaigns.
+	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	//Check to see if agent is a valid user
+	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	usertype := checkUserType(agentid, usersDb)
+	if usertype == "invalid" {
+		log.Info(fmt.Sprintf("Unauthorized user %s attempted to create competitor %s: %s", agentid, number, name))
+		return
+	}
+	id := uuid.New()
+	_, err = campaigns.Exec(fmt.Sprintf("INSERT INTO competitors (competitorid, number, name) VALUES ('%s', '%s', '%s');", id, number, name))
+	// Throw if doing something illegal, such as overwriting existing
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+	}
+	log.Debugf("Created event: %s", id.String())
+}
+
+func getCampaignOwner(campaignid string, db *sql.DB) string {
+	campaignids := processQuery(db.Query("SELECT campaignid FROM campaigns;"))
+	owners := processQuery(db.Query("SELECT owner FROM campaigns;"))
+	return correlateFields(campaignid, campaignids, owners)
+}
+
+func processQuery(rows *sql.Rows, err error) []string {
+	ind := 0
+	outputs := make([]string, 0)
+	if err != nil {
+		return outputs
+	}
+	for rows.Next() {
+		var str string
+		rows.Scan(&str)
+		outputs = append(outputs, str)
+		ind++
+	}
+	return outputs
+}
+
+func checkUserType(userid string, db *sql.DB) string {
+	userids := processQuery(db.Query("SELECT userid FROM users;"))
+	usertypes := processQuery(db.Query("SELECT usertype FROM users;"))
+	return correlateFields(userid, userids, usertypes)
+}
+
+func checkUserTeam(userid string, db *sql.DB) string {
+	userids := processQuery(db.Query("SELECT userid FROM users;"))
+	userteams := processQuery(db.Query("SELECT team FROM users;"))
+	return correlateFields(userid, userids, userteams)
+}
+
+func getEventCampaign(eventid string, db *sql.DB) string {
+	eventids := processQuery(db.Query("SELECT eventid FROM events;"))
+	campaignids := processQuery(db.Query("SELECT campaignid FROM events;"))
+	return correlateFields(eventid, eventids, campaignids)
+}
+
+func retconCompetitorID(teamnumber, teamid, databasePath string) {
+	//Replaces all references to a competitor team with their proper team id that matches with the teams table
+	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+	if err != nil {
+		log.Fatal("Unable to open or create database: " + err.Error())
+		return
+	}
+	competitorids := processQuery(campaigns.Query("SELECT competitorid FROM competitors;"))
+	numbers := processQuery(campaigns.Query("SELECT number FROM competitors;"))
+	oldid := correlateFields(teamnumber, numbers, competitorids)
+	//TODO: Determine places to swap out old id for new one
+	fmt.Sprint(oldid)
+}
+
+func getCompetitorNumber(competitorid string, db *sql.DB) string {
+	competitorids := processQuery(db.Query("SELECT competitorid FROM competitors;"))
+	numbers := processQuery(db.Query("SELECT number FROM competitors;"))
+	return correlateFields(competitorid, competitorids, numbers)
+}
+
+func correlateFields(term string, searchfield, resultfield []string) string {
+	searchind := -1
+	for ind, search := range searchfield {
+		if search == term {
+			searchind = ind
+			break
+		}
+	}
+	if searchind == -1 {
+		//If the search did not match anything in the searchfield
+		return "invalid"
+	}
+	return resultfield[searchind]
 }
 
 /*
@@ -96,11 +370,12 @@ func WriteResults() {
 /*
 GetCampaigns global or team.
 */
-func GetCampaigns(campaignid, id, teamid string) {
+func GetCampaigns(databasePath, agentid, campaignid, teamid string) {
 	// TODO: Load a list of global or team-specific campaigns. Check perms for the latter.
 }
 
 /*
+<<<<<<< HEAD
 CreateCampaign TODO.
 */
 /*
@@ -113,15 +388,10 @@ func CreateCampaign(name, teamid string, global bool) *sql.DB {
 */
 
 /*
+=======
+>>>>>>> 43a60af4c529aa18de62de9230a07e0e03ba7726
 WorkCampaign TODO.
 */
-func WorkCampaign(teamid, id, campaignid string) {
+func WorkCampaign(databasePath, agentid, teamid, campaignid string) {
 	// TODO: Set a team to work on a campaign. Check perms.
-}
-
-/*
-CreateCompetitor TODO
-*/
-func CreateCompetitor(number, id, campaignid string) {
-	// TODO: Create a scouted competitor in campaigns.
 }
