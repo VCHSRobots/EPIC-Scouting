@@ -1,0 +1,3 @@
+/*
+auth.js checks if user is logged in
+*/

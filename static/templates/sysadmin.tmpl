@@ -1,5 +1,13 @@
 {{ template "header" }}
 <img src="/media/construction.gif"></img>
 <h1>{{ .title }}</h1>
-<p>Current database size: JAVASCRIPT API QUERY GOES HERE!</p>
+<p>Current database size: JAVASCRIPT API QUERY GOES HERE!</p><br>
+<form action="/makesysadmin" method="post">
+<input type="text" name="make_sysadmin">
+<input type="submit" value="Give Sysadmin">
+</form>
+<form action="/downgradesysadmin" method="post">
+<input type="text" name="downgrade_sysadmin">
+<input type="submit" value="Downgrade Sysadmin">
+</form>
 {{ template "footer" }}
