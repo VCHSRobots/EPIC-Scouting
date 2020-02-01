@@ -11,9 +11,9 @@ function toggleVisibility() {
 </script>
 
 <p>Login...</p>
-<form action="/login" method="post">
-Username: <input type="text" id="username"><br>
-Password: <input type="password" id="password"> <input type="checkbox" onclick="toggleVisibility()">
+<form action="/loginPOST" method="post">
+Username: <input type="text" name="username"><br>
+Password: <input type="password" name="password"> <input type="checkbox" onclick="toggleVisibility()">
 <input type="submit" value="Login">
 </form>
 {{ template "footer" }}

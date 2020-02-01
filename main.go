@@ -72,7 +72,7 @@ func start(port int) {
 	router.GET("/", routes.Index)
 	router.GET("/about", routes.About)
 	router.GET("/login", routes.Login)
-	router.POST("/login", routes.LoginPOST)
+	router.POST("/loginPOST", routes.LoginPOST)
 	router.GET("/register", routes.Register)
 	router.GET("/scout", routes.Scout)
 	router.GET("/dashboard", routes.Dashboard)
