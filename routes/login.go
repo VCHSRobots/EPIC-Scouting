@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"EPIC-Scouting/lib/db"
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,7 +28,14 @@ func LoginPOST(c *gin.Context) {
 	*/
 	c.Request.ParseForm()
 	username := c.PostForm("username")
-	print("USR: " + string(username))
+	println("USR: " + string(username))
 	password := c.PostForm("password")
-	print("PWD: " + string(password))
+	println("PWD: " + string(password))
+	worked, userdata := db.CheckLogin(username, password)
+	fmt.Println(worked, userdata)
+	if worked {
+		c.HTML(200, "dashboard.tmpl", nil)
+	} else {
+		c.HTML(200, "login.tmpl", nil)
+	}
 }

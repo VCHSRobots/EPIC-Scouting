@@ -3,23 +3,31 @@ package db
 
 import (
 	"EPIC-Scouting/lib/lumberjack"
+	"crypto/rand"
+
 	"database/sql"
 	"fmt"
 	"os"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+
 	// TODO: Golint needs to stop complaining about this import. >:[
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var log = lumberjack.New("DB")
 
-const databasePath string = "bases/"
+const databasePath string = "./lib/db/bases/"
+
+//Default database path for testing
+const DatabasePath string = "./lib/db/bases/"
 
 func main() {
-	TouchBase("./bases/")
-	//CreateUser("./bases/", "0000000", "hello", "world", "4415", "Hello", "World", "hello@world.com", "000-000-0000", "sysadmin")
-	_, _ = CheckLogin("hello", "world")
+	TouchBase(databasePath)
+	CreateUser(databasePath, "hello", "world", "4415", "Hello", "World", "hello@world.com", "000-000-0000", "sysadmin")
+	worked, userdata := CheckLogin("hello", "world")
+	fmt.Println(worked, userdata)
 }
 
 /*
@@ -30,7 +38,6 @@ func TouchBase(databasePath string) {
 	newDatabase := func(databaseName string) *sql.DB {
 		db, err := sql.Open("sqlite3", databasePath+databaseName+".db")
 		if err != nil {
-			print(databaseName)
 			log.Fatal("Unable to open or create database: " + err.Error())
 		}
 		return db
@@ -44,7 +51,7 @@ func TouchBase(databasePath string) {
 	// Users
 	// This database stores all users.
 	users := newDatabase("users")
-	users.Exec("CREATE TABLE IF NOT EXISTS users ( userid TEXT PRIMARY KEY UNIQUE NOT NULL, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, firstname TEXT, lastname TEXT, email TEXT UNIQUE, phone TEXT UNIQUE, usertype TEXT)") // TODO: Add support for N+ contact options; via linked table?
+	users.Exec("CREATE TABLE IF NOT EXISTS users ( userid TEXT PRIMARY KEY UNIQUE NOT NULL, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, firstname TEXT, lastname TEXT, email TEXT UNIQUE, phone TEXT, usertype TEXT, salt TEXT)") // TODO: Add support for N+ contact options; via linked table?
 
 	// TODO: Create a SYSTEM team which makes the default public campaigns each season.
 
@@ -72,18 +79,22 @@ func TouchBase(databasePath string) {
 CheckLogin checks if a user has a valid login and returns their data (sans their password) if they do
 */
 func CheckLogin(username, password string) (bool, []string) {
-	users, err := sql.Open("sqlite3", "bases/users.db")
+	users, err := sql.Open("sqlite3", databasePath+"users.db")
 	if err != nil {
 		log.Fatal("Unable to open database: " + err.Error())
 	}
 	usernames := processQuery(users.Query("SELECT username FROM users"))
 	passwords := processQuery(users.Query("SELECT password FROM users"))
+	userids := processQuery(users.Query("SELECT userid FROM users"))
 	//TODO: Make this check hashes for all people with the same username. This may or may not be added.
 	checkhash := correlateFields(username, usernames, passwords)
+	userid := correlateFields(username, usernames, userids)
+	log.Debugf("Login Attempt: Username: %s Password: %s\n", username, password)
 	//TODO: Hash password for check
-	hash := password
-	userinfo := make([]string, 6)
-	if hash == checkhash {
+	salted := GetUserSaltedPassword(password, userid, users)
+	userinfo := make([]string, 0, 6)
+	hashmatched := bcrypt.CompareHashAndPassword([]byte(checkhash), []byte(salted))
+	if hashmatched == nil {
 		userind := -1
 		for ind, user := range usernames {
 			if user == username {
@@ -95,12 +106,13 @@ func CheckLogin(username, password string) (bool, []string) {
 			//this should only happen if something went terribly wrong - username was already checked at this point
 			return false, userinfo
 		}
+		userids := processQuery(users.Query("SELECT userid FROM users"))
 		firstnames := processQuery(users.Query("SELECT firstname FROM users"))
 		lastnames := processQuery(users.Query("SELECT lastname FROM users"))
 		emails := processQuery(users.Query("SELECT email FROM users"))
 		phones := processQuery(users.Query("SELECT phone FROM users"))
 		usertypes := processQuery(users.Query("SELECT usertype FROM users"))
-		userinfo = append(userinfo, username, firstnames[userind], lastnames[userind], emails[userind], phones[userind], usertypes[userind])
+		userinfo = append(userinfo, userids[userind], username, firstnames[userind], lastnames[userind], emails[userind], phones[userind], usertypes[userind])
 		return true, userinfo
 	}
 	return false, userinfo
@@ -109,20 +121,22 @@ func CheckLogin(username, password string) (bool, []string) {
 /*
 CreateUser creates a new user.
 */
-func CreateUser(databasePath, callerID, username, password, team, firstName, lastName, email, phone, usertype string) {
-	// TODO: Make a version of this that updates user information.
+func CreateUser(databasePath, username, password, team, firstname, lastname, email, phone, usertype string) {
+	fmt.Printf("Creating user %s\n", username)
 	users, err := sql.Open("sqlite3", databasePath+"users.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
 	}
 	id := uuid.New()
-	fmt.Println(id)
-	//TODO: Add password hashing
-	_, err = users.Exec(fmt.Sprintf("INSERT INTO users (userid, username, password, firstname, lastname, email, phone, usertype) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');", fmt.Sprint(id), username, password, firstname, lastname, email, phone, usertype))
+	//make hash for password with added salt of len 256
+	//salt comes out as a printed array of integers because sql doesn't like the random bytes converted to strings. it looks odd when you print it out but it works.
+	hash, salt := hashNewPassword(password, fmt.Sprint(id))
+	//TODO: Add password hashing with uuid as salt
+	_, err = users.Exec(fmt.Sprintf("INSERT INTO users (userid, username, password, firstname, lastname, email, phone, usertype, salt) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');", fmt.Sprint(id), username, string(hash), firstname, lastname, email, phone, usertype, salt))
 	// Throw if doing something illegal, such as overwriting existing user
 	if err != nil {
-		log.Fatal("Unable to create user: " + err.Error())
+		log.Info("Unable to create user: " + err.Error())
 	}
 	log.Debugf("Created user: '%s'", id.String())
 }
@@ -360,11 +374,50 @@ func correlateFields(term string, searchfield, resultfield []string) string {
 	return resultfield[searchind]
 }
 
+func hashNewPassword(password, id string) ([]byte, string) {
+	//always hashes passwords with a 256 byte salt
+	salt := [256]byte{}
+	_, err := rand.Read(salt[:])
+	if err != nil {
+		log.Fatal("Unable to generate salt for user password")
+	}
+	saltstring := fmt.Sprint(salt)
+	pstring := fmt.Sprintf("%s_%s%s", password, fmt.Sprint(id), saltstring)
+	fmt.Printf("New salted password: %s\n", pstring)
+	hash, err := bcrypt.GenerateFromPassword([]byte(pstring), 10)
+	if err != nil {
+		log.Info("Password hash failed")
+	}
+	return hash, saltstring
+}
+
+//GetUserSaltedPassword gets the salted password string for the given userid
+func GetUserSaltedPassword(password, id string, userDb *sql.DB) string {
+	userids := processQuery(userDb.Query("SELECT userid FROM users"))
+	salts := processQuery(userDb.Query("SELECT salt FROM users"))
+	salt := correlateFields(id, userids, salts)
+	pstring := fmt.Sprintf("%s_%s%s", password, id, salt)
+	fmt.Printf("Got salted password: %s\n", pstring)
+	return pstring
+}
+
+//GetUserPasswordHash gets the password hash for a specific user's password
+func GetUserPasswordHash(id string) []byte {
+	userDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Unable to create or open database: %s", databasePath+"users.db"))
+	}
+	userids := processQuery(userDb.Query("SELECT userid FROM users"))
+	passwords := processQuery(userDb.Query("SELECT password FROM users"))
+	hash := []byte(correlateFields(id, userids, passwords))
+	return hash
+}
+
 /*
-Results TODO
+WriteResults TODO
 */
 func WriteResults() {
-	// TOD	O
+	// TODO
 	// Throw if overwriting existing
 }
 

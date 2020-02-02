@@ -1,4 +1,5 @@
 {{ template "header" }}
+
 <script>
 function toggleVisibility() {
   var p = document.getElementById("password");
@@ -16,4 +17,5 @@ Username: <input type="text" name="username"><br>
 Password: <input type="password" name="password"> <input type="checkbox" onclick="toggleVisibility()">
 <input type="submit" value="Login">
 </form>
+
 {{ template "footer" }}
