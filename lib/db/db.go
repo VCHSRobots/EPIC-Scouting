@@ -109,7 +109,8 @@ func CheckLogin(username, password string) (bool, []string) {
 /*
 CreateUser creates a new user.
 */
-func CreateUser(databasePath, agentid, username, password, team, firstname, lastname, email, phone, usertype string) {
+func CreateUser(databasePath, callerID, username, password, team, firstName, lastName, email, phone, usertype string) {
+	// TODO: Make a version of this that updates user information.
 	users, err := sql.Open("sqlite3", databasePath+"users.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
@@ -375,21 +376,6 @@ func GetCampaigns(databasePath, agentid, campaignid, teamid string) {
 }
 
 /*
-<<<<<<< HEAD
-CreateCampaign TODO.
-*/
-/*
-func CreateCampaign(name, teamid string, global bool) *sql.DB {
-	// TODO: Clone global campaigns to team-specific campaign if requested.
-	// Only sysadmin can create global campaigns.
-	id := uuid.New()
-	log.Debugf("Created campaign %s", id)
-}
-*/
-
-/*
-=======
->>>>>>> 43a60af4c529aa18de62de9230a07e0e03ba7726
 WorkCampaign TODO.
 */
 func WorkCampaign(databasePath, agentid, teamid, campaignid string) {
