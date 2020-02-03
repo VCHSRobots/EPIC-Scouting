@@ -1,13 +1,13 @@
-{{ template "header" }}
+{{template "header" .HeaderData}}
 <p>Register...</p>
 <form action="/registerPOST" method="post">
-Username: <input type="text" name="username"><br>
-Password: <input type="password" name="password"><br>
-Email: <input type="text" name="email"><br>
-First Name: <input type="text" name="firstname"><br>
-Last Name: <input type="text" name="lastname"><br>
-Credit Card Number: <input type="text" name="phone"><br>
-Team: <input type="text" name="team"><br>
+<p>Username: <input type="text" name="username">*</p><br>
+<p>Password: <input type="password" name="password"></p>*<br>
+<p>Email: <input type="text" name="email"></p><br>
+<p>First Name: <input type="text" name="firstname"></p><br>
+<p>Last Name: <input type="text" name="lastname"></p><br>
+<p>Phone Number: <input type="text" name="phone"></p><br>
+<p><i>Fields marked with an * are mandatory.</i></p>
 <input type="submit" value="Register">
 </form>
-{{ template "footer" }}
+{{template "footer"}}

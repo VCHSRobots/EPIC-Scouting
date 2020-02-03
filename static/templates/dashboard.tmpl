@@ -1,8 +1,13 @@
-{{ template "header" }}
-
-<p>You are logged in!</p>
-<a href="http://localhost:443/scout">Match Scout</a>
-<a href="http://localhost:443/pitscout">Pit Scout</a>
-<a href="http://localhost:443/data">Data</a>
-
-{{ template "footer" }}
+{{template "header" .HeaderData}}
+<h1>dashboard</h1>
+<p>Welcome, {{.username}}!</p>
+<p>Your teams:</p>
+<select>
+{{/* Use range to populate field. If empty, redirect from /dashboard to /join */}}
+    <option value="teamID-goes-here">4415 - EPIC Robotz</option> {{/* TODO: TEMP */}}
+</select>
+<p><a><i href="/joinTeam">Join another team</i></a></p>
+<a href="/scoutMatch">Match Scouting</a>
+<a href="/scoutPit">Pit Scouting</a>
+<a href="/data">Data</a>
+{{template "footer"}}

@@ -1,7 +1,9 @@
-{{ template "header" }}
+{{template "header" .HeaderData}}
 <img src="/media/construction.gif"></img>
-<h1>{{ .title }}</h1>
-<p>Current database size: JAVASCRIPT API QUERY GOES HERE!</p><br>
+<h1>SUPER SECRET SYSADMIN BUNKER</h1>
+<img src="/media/root.png"></img>
+<p>Current database sizes: {{.DatabaseSizes}}</p>
+<br>
 <form action="/makesysadmin" method="post">
 <input type="text" name="make_sysadmin">
 <input type="submit" value="Give Sysadmin">
@@ -10,4 +12,4 @@
 <input type="text" name="downgrade_sysadmin">
 <input type="submit" value="Downgrade Sysadmin">
 </form>
-{{ template "footer" }}
+{{template "footer"}}

@@ -20,12 +20,12 @@ var log = lumberjack.New("DB")
 
 const databasePath string = "./lib/db/bases/"
 
-//Default database path for testing
+// DatabasePath is the default path for testing.
 const DatabasePath string = "./lib/db/bases/"
 
 func main() {
 	TouchBase(databasePath)
-	CreateUser(databasePath, "hello", "world", "4415", "Hello", "World", "hello@world.com", "000-000-0000", "sysadmin")
+	CreateUser(databasePath, "sysadmin", "sysadmin", "", "", "", "", "sysadmin")
 	worked, userdata := CheckLogin("hello", "world")
 	fmt.Println(worked, userdata)
 }
@@ -121,7 +121,7 @@ func CheckLogin(username, password string) (bool, []string) {
 /*
 CreateUser creates a new user.
 */
-func CreateUser(databasePath, username, password, team, firstname, lastname, email, phone, usertype string) {
+func CreateUser(databasePath, username, password, firstname, lastname, email, phone, usertype string) {
 	fmt.Printf("Creating user %s\n", username)
 	users, err := sql.Open("sqlite3", databasePath+"users.db")
 	if err != nil {
@@ -433,4 +433,28 @@ WorkCampaign TODO.
 */
 func WorkCampaign(databasePath, agentid, teamid, campaignid string) {
 	// TODO: Set a team to work on a campaign. Check perms.
+}
+
+/*
+accessCheck determines whether a database was read or written to properly. If not, it reports the error via log.Fatalf
+*/
+func accessCheck(err error) {
+	if err != nil {
+		log.Fatalf("Unable to access database: %s", err.Error())
+	}
+}
+
+/*
+GetDatabaseSize returns the databases' current sizes as a []string.
+*/
+func GetDatabaseSize() []string {
+	results := []string{}
+	bases := []string{"users", "teams", "campaigns"}
+	for _, base := range bases {
+		file, error := os.Stat(databasePath + base + ".db")
+		accessCheck(error)
+		size := string(file.Size())
+		results = append(results, base+": "+size)
+	}
+	return results
 }

@@ -1,9 +1,9 @@
-{{ template "header" }}
+{{template "header" .HeaderData}}
 <div class="menuBar">
 <p>
-<a href="/about/">About</a>{{if eq .UserMode "guest"}} | <a href="/login/">Login</a> | <a href="/register/">Register</a>{{end}}
+<a href="/about">About</a>{{if eq .UserMode "guest"}} | <a href="/login">Login</a> | <a href="/register">Register</a>{{else if eq .UserMode "user"}} | <a href="/dashboard">Dashboard</a>{{else if eq .UserMode "sysAdmin"}} | <a href="/dashboard">Dashboard</a> | <a href="sysAdmin">SysAdmin Tools</a>{{end}} | <a href="/help">Help</a>
 </p>
 </div>
 <img src="/media/construction.gif"></img>
 <p style="position: absolute; bottom: 0;">Build {{.Build}}</p>
-{{ template "footer" }}
+{{template "footer"}}

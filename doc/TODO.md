@@ -104,4 +104,4 @@
 
 ## YESTERDAY
 
- - [ ] RACE CONDITION: calls to `lumberjack` in package `web` need to have log location `p` set or the multiwriter `splitLog` will fail! However: package `web` is called by every page in `pages` via `web.RegisterPage()`. This is an issue because the configuration isn't loaded until `main.main()` runs `configuration = config.Load()`. *SOLUTION*: `lumberjack` needs to load config independently.
+ - [X] RACE CONDITION: calls to `lumberjack` in package `web` need to have log location `p` set or the multiwriter `splitLog` will fail! However: package `web` is called by every page in `pages` via `web.RegisterPage()`. This is an issue because the configuration isn't loaded until `main.main()` runs `configuration = config.Load()`. *SOLUTION*: `lumberjack` needs to load config independently.
