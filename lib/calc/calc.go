@@ -8,6 +8,83 @@ import (
 	"sort"
 )
 
+//RawTeamEventData gets a team's raw statistics for an event - best for putting on spreadsheets for raw comparison/printout
+
+/*All calculation functions below can be set to include or exclude certain data based on time to allow display of development of scores over time
+//Team scoring devices never affect each other and are measured against an ideal target. They are then used for computing a team's overall rank*/
+
+//TeamAuto gets a team's autonomous rating
+
+//TeamShooting gets a team's overall shooting score
+
+//TeamClimbing gets a team's score for climbing
+
+//TeamDefenceTolerance gets a measurement of how little a team has been affected by defense
+
+//TeamDefence gets how good a team is a defending opponents
+
+//TeamColorWheel gets how good a team is at manipulating the color wheel
+
+//TeamPenalty gets how many penalties a team accrues. Extra weight to yellow cards and tech fouls.
+
+/*Team scoring breakdowns return the numbers that go into calculating the factors above. They don't affect the team's overall score directly. They should be used to get a better idea of why a score is a certain value and what a robot is actually good at.
+They are also what the above functions use to get their data*/
+
+//TeamAutoBreakdown gets a team's ability to cross the auto line, ammount of balls scored in auto, auto accuracy, and ammount of points scored in auto
+
+//TeamShootingBreakdown gets a team's teleop shooting rate, shooting accuracy, ball score rate, and point score rate
+
+//TeamClimbingBreakdown gets a team's average climbing speed, ability to balance the bar, and average points scored for climbing
+
+//TeamDefenceToleranceBreakdown gets how many times a robot has been defended successfully and unseccesfully, and how many points are lost due to defense
+
+//TeamDefenceBreakdown gets how many times and how many points a team takes away from their opponent in defending
+
+//TeamColorWheelBreakdown gets how quickly a team can do stage 1 and 2 of the color wheel, along with whether they can do it at all
+
+//TeamPenaltyBreakdown gets how many times a team has recieved regular fouls, tech fouls, and yellow cards, along with the total amount of points lost by them to fouls
+
+//Team Overall Scoring and Ranking gives teams conglomerate scores such as OPR, DPR, and overall ranking
+
+//TeamOPR gives a team an overall offensive rating
+
+//TeamDPR gives a team an overall defensive rating
+
+//TeamOverallEvent gives a team an overall quality score
+
+//RankEventTeams ranks all teams from best to worst based on their overall score
+
+//Match Filtering Functions
+
+//filterTeamMatchesBefore returns all match data from a team at an event before a given match number. Includes the given match number
+
+//filterTeamMatchesAfter returns all match data from a team at an event after a given match number. Includes the given match number
+
+//getTeamMatches returns all data from a team at an event
+
+/*Scouter Ranking Functions rank scouts based on their accuracy*/
+
+//RankScouterEvent
+
+//RankScouterGlobal
+
+/*Match Census Functions determine the weight of contradictary data on the same match and return a score useable for the system*/
+//Below are differing census methods. They may or may not be used.
+
+//IsUnanimous checks if data has significant disagreements - this usually means non-identical pieces of data unless we had something dealing in decimals/seconds
+
+//DemocraticeCensus tries to find answers which are most common and picks them
+
+//MeanCensus averages the answers
+
+//MedianCensus takes the median of answers
+
+//PruneOutliers takes outliers out of the data
+
+//Calculation functions that operate on raw data
+
+//Most of the below belong to match census functions
+
 //DemocraticOutliers - Finds outliers which are not in the majority opinion i.e. are not the same value as most of the others
 func DemocraticOutliers(data []float64) []float64 {
 	//This will mark repeated values as outliers if there is another value more common than them
