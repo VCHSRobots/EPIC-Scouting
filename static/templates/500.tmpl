@@ -1,2 +1,6 @@
-{{ template "header" }}
-{{ template "footer" }}
+{{template "header" .HeaderData}}
+<h1>500</h1>
+<h2>Internal server error.</h2>
+<p class="code">{{.Error}}</p>
+<img src="/media/error.png"></img>
+{{template "footer"}}

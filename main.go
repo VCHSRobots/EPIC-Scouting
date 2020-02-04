@@ -7,10 +7,12 @@ import (
 	"EPIC-Scouting/routes"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	nice "github.com/ekyoung/gin-nice-recovery"
+	"github.com/gin-contrib/gzip"
 
 	"github.com/gin-gonic/gin"
 )
@@ -59,27 +61,30 @@ func start(port int) {
 	// TODO END
 
 	router = gin.New()
-	router.Use(gin.Logger(), gin.Recovery()) // TODO: Add recovery middleware and authentication middle which refreshes session tokens.
-	router.Static("/css", "./static/css")    // TODO: Make URL access to /css/, /js/, /media/, and /templates/ use the proper NoRoute() handler and NOT http.404, as it currently just returns a blank page.
+	router.Use(gin.Logger())                    // TODO: Add authentication middle which refreshes session tokens.
+	router.Use(gzip.Gzip(gzip.BestCompression)) // Gzip compression.
+	router.Static("/css", "./static/css")       // TODO: Make URL access to /css/, /js/, /media/, and /templates/ use the proper NoRoute() handler and NOT http.404, as it currently just returns a blank page.
 	router.Static("/js", "./static/js")
 	router.Static("/media", "./static/media")
 	router.Static("/templates", "./static/templates")
-	router.LoadHTMLGlob("./static/templates/*") // Load templates
-	router.NoRoute(func(c *gin.Context) { c.HTML(http.StatusNotFound, "404.tmpl", nil) })
-	router.NoMethod(func(c *gin.Context) { c.HTML(http.StatusMethodNotAllowed, "405.tmpl", nil) })
-	// TODO: Add handlers for 401, 403, 500 codes.
+	router.LoadHTMLGlob("./static/templates/*") // Load templates.
 	// TODO: Dynamically load routes from files in "/routes/" instead of hard-coding them.
+	router.NoRoute(routes.NotFound)                       // 404.
+	router.NoMethod(routes.MethodNotAllowed)              // 405.
+	router.Use(nice.Recovery(routes.InternalServerError)) // 500.
 	router.GET("/", routes.Index)
 	router.GET("/about", routes.About)
+	router.GET("/dashboard", routes.Dashboard)
+	router.GET("/help", routes.Help)
 	router.GET("/login", routes.Login)
 	router.POST("/loginPOST", routes.LoginPOST)
 	router.GET("/register", routes.Register)
 	router.POST("/registerPOST", routes.RegisterPOST)
 	router.GET("/scout", routes.Scout)
-	router.GET("/dashboard", routes.Dashboard)
-	router.GET("/pitscout", routes.PitScout)
-	router.GET("/data", routes.Data)
-	router.GET("/sysadmin", routes.SysAdmin)
+	router.GET("/sysAdmin", routes.SysAdmin)
+	router.GET("/teamCreate", routes.TeamCreate)
+	router.GET("/teamData", routes.TeamData)
+	router.GET("/teamAdmin", routes.TeamAdmin)
 	log.Debugf("Serving on port %d.", port)
 	log.Fatal(router.Run(address))
 }

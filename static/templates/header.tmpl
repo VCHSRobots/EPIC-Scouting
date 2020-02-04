@@ -7,7 +7,7 @@
 {{if .Title}}<title>{{.Title}}</title>{{else}}<title>Epic Scouting</title>{{end}}
 <link rel="shortcut icon" type="image/x-icon" href="../media/favicon.ico">
 <link rel="stylesheet" type="text/css" href="../css/global.css">
-{{/*TODO: Fix adding stylesheets: {{range .StyleSheets}}<link rel="stylesheet" type="text/css" href="../css/{{.}}.css"}{{end}}*/}}
+{{range .StyleSheets}}<link rel="stylesheet" type="text/css" href="../css/{{.}}.css">{{end}}
 </head>
 <body>
 {{end}}

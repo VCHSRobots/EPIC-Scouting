@@ -1,16 +1,11 @@
 body {
     background-color: #eceff1;
+    font-family: sans-serif;
     margin: auto;
 }
 
-p {
+h1, h2, h3 {
     margin: 6px;
-}
-
-.menuBar {
-    background-color: #aaaaaa;
-    margin: 10 10 10 10;
-    border: 1px solid #000000;
 }
 
 img {
@@ -19,4 +14,23 @@ img {
     left: 50%;
     margin-right: -50%;
     transform: translate(-50%, -50%);
+}
+
+p {
+    margin: 6px;
+}
+
+.code {
+    font-family: monospace;
+}
+
+.info:hover {
+    cursor: help;
+    text-decoration: underline;
+}
+
+.menuBar {
+    background-color: #aaaaaa;
+    margin: 10 10 10 10;
+    border: 1px solid #000000;
 }

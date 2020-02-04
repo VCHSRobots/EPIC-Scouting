@@ -1,5 +1,5 @@
 /*
-db.js calls for backend database querys
+db.js calls for backend database queries.
 */
 
 function listCampaigns() {

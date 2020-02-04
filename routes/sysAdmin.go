@@ -8,5 +8,5 @@ import (
 SysAdmin shows the SysAdmin page.
 */
 func SysAdmin(c *gin.Context) {
-	c.HTML(200, "sysadmin.tmpl", nil)
+	c.HTML(200, "sysAdmin.tmpl", nil)
 }
