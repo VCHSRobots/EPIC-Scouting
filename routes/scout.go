@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,5 +10,5 @@ import (
 Scout shows the scout page.
 */
 func Scout(c *gin.Context) {
-	c.HTML(200, "scout.tmpl", nil)
+	c.HTML(http.StatusOK, "scout.tmpl", nil)
 }

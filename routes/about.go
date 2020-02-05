@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,5 +10,5 @@ import (
 About shows the About page.
 */
 func About(c *gin.Context) {
-	c.HTML(200, "about.tmpl", nil)
+	c.HTML(http.StatusOK, "about.tmpl", nil)
 }

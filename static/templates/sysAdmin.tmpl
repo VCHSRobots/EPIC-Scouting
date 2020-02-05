@@ -2,7 +2,7 @@
 <img src="/media/construction.gif"></img>
 <h1>SUPER SECRET SYSADMIN BUNKER</h1>
 <img src="/media/root.png"></img>
-<p>Current database sizes: {{.DatabaseSizes}}</p>
+<p>Current database sizes: <ul>{{range .DatabaseSizes}}<li>{{.}}</li>{{end}}</ul></p>
 <br>
 <form action="/makesysadmin" method="post">
 <input type="text" name="make_sysadmin">

@@ -37,6 +37,8 @@ func DemocraticOutliers(data []float64) []float64 {
 	return outliers
 }
 
+func DataSize(bytes)
+
 //StatisticalOutliers - Checks for outliers outside +/-1.5 of the interquartile range
 func StatisticalOutliers(data []float64) []float64 {
 	outliers := make([]float64, 0, len(data))
