@@ -1,7 +1,7 @@
 {{template "header" .HeaderData}}
 <script>
 function toggleVisibility() {
-  var p = document.getElementByName("password");
+  var p = document.getElementById("password");
   if (p.type === "password") {
     p.type = "text";
   } else {
@@ -14,7 +14,7 @@ function toggleVisibility() {
 <form action="/loginPOST" method="post">
 {{if not .loggedIn}}<p><em>The username or password you have entered was incorrect. Please try again.</em></p>{{end}}
 <p>Username: <input type="text" name="username"></p><br>
-<p>Password: <input type="password" name="password"> <input type="checkbox" onclick="toggleVisibility()"></p>
+<p>Password: <input type="password" name="password" id="password"> <input type="checkbox" onclick="toggleVisibility()"></p>
 <input type="submit" value="Login">
 </form>
 {{template "footer"}}

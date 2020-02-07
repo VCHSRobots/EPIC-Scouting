@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,5 +10,5 @@ import (
 Dashboard shows the dashboard.
 */
 func Dashboard(c *gin.Context) {
-	c.HTML(200, "dashboard.tmpl", nil)
+	c.HTML(http.StatusOK, "dashboard.tmpl", nil)
 }

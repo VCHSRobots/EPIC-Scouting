@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,5 +10,5 @@ import (
 TeamAdmin shows the team administration page.
 */
 func TeamAdmin(c *gin.Context) {
-	c.HTML(200, "teamAdmin.tmpl", nil)
+	c.HTML(http.StatusOK, "teamAdmin.tmpl", nil)
 }

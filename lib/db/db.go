@@ -3,14 +3,9 @@ package db
 
 import (
 	"EPIC-Scouting/lib/lumberjack"
-	"crypto/rand"
 
 	"database/sql"
-	"fmt"
 	"os"
-
-	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 
 	// TODO: Golint needs to stop complaining about this import. >:[
 	_ "github.com/mattn/go-sqlite3"
@@ -18,35 +13,25 @@ import (
 
 var log = lumberjack.New("DB")
 
-const databasePath string = "./lib/db/bases/"
-
-// DatabasePath is the default path for testing.
-const DatabasePath string = "./lib/db/bases/"
-
-func main() {
-	TouchBase(databasePath)
-	CreateUser(databasePath, "sysadmin", "sysadmin", "", "", "", "", "sysadmin")
-	worked, userdata := CheckLogin("hello", "world")
-	fmt.Println(worked, userdata)
-}
+/*
+DatabasePath is the path to the directory which holds the databases.
+*/
+var DatabasePath string
 
 /*
 TouchBase creates all databases used by the server if they do not exist.
 Its name is a play on the GNU program "touch", the idiom "[to] touch base", and the word "database". The author is rather proud of this.
 */
 func TouchBase(databasePath string) {
+	DatabasePath = databasePath
 	newDatabase := func(databaseName string) *sql.DB {
-		db, err := sql.Open("sqlite3", databasePath+databaseName+".db")
-		if err != nil {
-			log.Fatal("Unable to open or create database: " + err.Error())
-		}
+		db, err := sql.Open("sqlite3", DatabasePath+databaseName+".db")
+		accessCheck(err)
 		return db
 	}
 
-	err := os.MkdirAll(databasePath, 0755)
-	if err != nil {
-		log.Fatal("Unable to create database: " + err.Error())
-	}
+	err := os.MkdirAll(DatabasePath, 0755)
+	accessCheck(err)
 
 	// Users
 	// This database stores all users.
@@ -56,33 +41,30 @@ func TouchBase(databasePath string) {
 	// TODO: Create a SYSTEM team which makes the default public campaigns each season.
 
 	// Scouting teams
-
 	teams := newDatabase("teams")
-	teams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL, currentcampaign TEXT NOT NULL )")                                                                              // A team.
+	teams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL, schedule TEXT NOT NULL )")                                                                                     // A team.
 	teams.Exec("CREATE TABLE IF NOT EXISTS members ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL, usertype TEXT NOT NULL )")                                                                                                            // The members on a team. UserType is either member or admin.
-	teams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL )")                                                                                                                             // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
+	teams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                                                                                                              // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
 	teams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL, stats )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
 
 	// Campaigns (game seasons / years)
 	// This database stores the expected campaign / event / match schedule and data, and expected competing teams. Data pulled from TBA.
-
 	campaigns := newDatabase("campaigns")
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS campaigns ( campaignid TEXT PRIMARY KEY UNIQUE NOT NULL, owner TEXT NOT NULL, name TEXT NOT NULL )")                                      // TODO: Add more information about each campaign. Campaign owner is a teamid. If campaign owner is all zeros, campaign is global.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS events ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, name TEXT NOT NULL, location TEXT, starttime TEXT, endtime TEXT )") // TODO: Add more information about each event.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS matches ( eventid TEXT PRIMARY KEY NOT NULL, matchid TEXT UNIQUE NOT NULL, matchnumber INTEGER NOT NULL, starttime TEXT, endtime TEXT )") // TODO: Add more information about each match.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS participants ( matchid TEXT PRIMARY KEY NOT NULL, competitorid TEXT UNIQUE NOT NULL) ")                                                   // The participants in each match.
+	campaigns.Exec("CREATE TABLE IF NOT EXISTS competitors ( competitorid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL )")                                   // TODO: Add more information about each competing team.
 
-	campaigns.Exec("CREATE TABLE IF NOT EXISTS competitors ( competitorid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL )") // TODO: Add more information about each competing team.
+	// TODO: Teams need a way to weight each of their competitors.
 }
 
 /*
-CheckLogin checks if a user has a valid login and returns their data (sans their password) if they do
-*/
+CheckLogin checks if a user has a valid login and returns their data (sans their password) if they do.
+
 func CheckLogin(username, password string) (bool, []string) {
-	users, err := sql.Open("sqlite3", databasePath+"users.db")
-	if err != nil {
-		log.Fatal("Unable to open database: " + err.Error())
-	}
+	users, err := sql.Open("sqlite3", DatabasePath+"users.db")
+	accessCheck(err)
 	usernames := processQuery(users.Query("SELECT username FROM users"))
 	passwords := processQuery(users.Query("SELECT password FROM users"))
 	userids := processQuery(users.Query("SELECT userid FROM users"))
@@ -117,10 +99,24 @@ func CheckLogin(username, password string) (bool, []string) {
 	}
 	return false, userinfo
 }
+*/
+
+/*
+CheckLoginII is an attempt at re-creating CheckLogin with different SQL queries.
+*/
+func CheckLoginII(username, password string) (loggedIn bool) {
+	users, err := sql.Open("sqlite3", DatabasePath+"users.db")
+	accessCheck(err)
+	var uname string
+	err = users.QueryRow("SELECT PASSWORD FROM USERS WHERE USERNAME = ?", username).Scan(&uname)
+	accessCheck(err)
+	log.Debugf("Checking login for username %q", uname)
+	return loggedIn
+}
 
 /*
 CreateUser creates a new user.
-*/
+
 func CreateUser(databasePath, username, password, firstname, lastname, email, phone, usertype string) {
 	fmt.Printf("Creating user %s\n", username)
 	users, err := sql.Open("sqlite3", databasePath+"users.db")
@@ -143,7 +139,7 @@ func CreateUser(databasePath, username, password, firstname, lastname, email, ph
 
 /*
 CreateCampaign TODO.
-*/
+
 func CreateCampaign(databasePath, agentid, owner, name string) {
 	// TODO: Clone global campaigns to team-specific campaign if requested.
 	// Only sysadmin can create global campaigns.
@@ -238,7 +234,7 @@ func CreateEvent(databasePath, agentid, campaignid, name, location, starttime, e
 
 /*
 CreateTeam TODO
-*/
+
 func CreateTeam(databasePath, agentid, number, name, currentcampaign string) {
 	// TODO
 	// Req: TeamNumber, TeamName, etc
@@ -272,10 +268,7 @@ func CreateTeam(databasePath, agentid, number, name, currentcampaign string) {
 
 /*
 CreateCompetitor TODO
-*/
-func CreateCompetitor(databasePath, agentid, number, name string) {
-	// TODO: Create a scouted competitor in campaigns.
-	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+mplate "footer"}}ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
@@ -306,6 +299,7 @@ func getCampaignOwner(campaignid string, db *sql.DB) string {
 	return correlateFields(campaignid, campaignids, owners)
 }
 
+/*
 func processQuery(rows *sql.Rows, err error) []string {
 	ind := 0
 	outputs := make([]string, 0)
@@ -320,6 +314,7 @@ func processQuery(rows *sql.Rows, err error) []string {
 	}
 	return outputs
 }
+
 
 func checkUserType(userid string, db *sql.DB) string {
 	userids := processQuery(db.Query("SELECT userid FROM users;"))
@@ -412,6 +407,7 @@ func GetUserPasswordHash(id string) []byte {
 	hash := []byte(correlateFields(id, userids, passwords))
 	return hash
 }
+*/
 
 /*
 WriteResults TODO
@@ -423,14 +419,14 @@ func WriteResults() {
 
 /*
 GetCampaigns global or team.
-*/
+
 func GetCampaigns(databasePath, agentid, campaignid, teamid string) {
 	// TODO: Load a list of global or team-specific campaigns. Check perms for the latter.
 }
 
 /*
 WorkCampaign TODO.
-*/
+
 func WorkCampaign(databasePath, agentid, teamid, campaignid string) {
 	// TODO: Set a team to work on a campaign. Check perms.
 }
@@ -445,16 +441,16 @@ func accessCheck(err error) {
 }
 
 /*
-GetDatabaseSize returns the databases' current sizes as a []string.
+GetDatabaseSize returns the databases' current sizes in bytes as a []string.
 */
-func GetDatabaseSize() []string {
-	results := []string{}
+func GetDatabaseSize() map[string]int64 {
+	results := make(map[string]int64)
 	bases := []string{"users", "teams", "campaigns"}
 	for _, base := range bases {
-		file, error := os.Stat(databasePath + base + ".db")
+		file, error := os.Stat(DatabasePath + base + ".db")
 		accessCheck(error)
-		size := string(file.Size())
-		results = append(results, base+": "+size)
+		size := file.Size()
+		results[base] = size
 	}
 	return results
 }

@@ -1,7 +1,7 @@
 {{template "header" .HeaderData}}
 <div class="menuBar">
 <p>
-<a href="/about">About</a>{{if eq .UserMode "guest"}} | <a href="/login">Login</a> | <a href="/register">Register</a>{{else if eq .UserMode "user"}} | <a href="/dashboard">Dashboard</a>{{else if eq .UserMode "sysAdmin"}} | <a href="/dashboard">Dashboard</a> | <a href="sysAdmin">SysAdmin Tools</a>{{end}} | <a href="/help">Help</a>
+<a href="/about">About</a>{{if ne .UserMode "guest"}} | <a href="/dashboard">Dashboard</a><span style="float: right;"><a href="/logout">Log out</a></span>{{else}}<span style="float: right;"><a href="/register">Register</a> | <a href="/login">Login</a></span>{{end}}
 </p>
 </div>
 <img src="/media/construction.gif"></img>

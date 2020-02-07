@@ -4,6 +4,7 @@ import (
 	"EPIC-Scouting/lib/config"
 	"EPIC-Scouting/lib/web"
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,6 @@ func Index(c *gin.Context) {
 	build := fmt.Sprintf("%s [%s]", buildName, buildDate)
 	// TODO: Get user status via authentication function.
 	headerData := &web.HeaderData{Title: "Index", StyleSheets: nil}
-	data := &indexData{headerData, "sysAdmin", build}
-	c.HTML(200, "index.tmpl", data)
-	// TODO: If the user is already logged in, show the "DASHBOARD" and "LOG OUT" buttons and remove the "LOGIN" and "REGISTER" buttons.
+	data := &indexData{headerData, "guest", build}
+	c.HTML(http.StatusOK, "index.tmpl", data)
 }

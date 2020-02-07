@@ -2,6 +2,7 @@ package routes
 
 import (
 	"EPIC-Scouting/lib/db"
+	"EPIC-Scouting/lib/web"
 	"fmt"
 	"net/http"
 
@@ -12,8 +13,9 @@ import (
 Login shows the login page.
 */
 func Login(c *gin.Context) {
+	HeaderData := &web.HeaderData{}
 	loggedIn := true
-	c.HTML(200, "login.tmpl", loggedIn)
+	c.HTML(http.StatusOK, "login.tmpl", gin.H{"loggedIn": loggedIn, "HeaderData": HeaderData})
 }
 
 /*
@@ -23,8 +25,8 @@ func LoginPOST(c *gin.Context) {
 	c.Request.ParseForm()
 	username := c.PostForm("username")
 	password := c.PostForm("password")
-	loggedIn, userdata := db.CheckLogin(username, password)
-	fmt.Println(loggedIn, userdata)
+	loggedIn := db.CheckLoginII(username, password)
+	fmt.Println(loggedIn)
 	if loggedIn {
 		c.Redirect(http.StatusSeeOther, "/dashboard") // Although gin's method here is named Redirect, the HTTP response code used is 303. See https://en.wikipedia.org/wiki/HTTP_303 for more information.
 	} else {
