@@ -8,6 +8,27 @@ import (
 	"sort"
 )
 
+type Results struct {
+	//struct of the results data for a given team in a given match
+	autoLineCrosses         int
+	autoAccuracy            int
+	autoPoints              int
+	shotQuantity            int
+	shotAccuracy            int
+	fuelScored              int
+	fuelPointsScored        int
+	climbingSpeed           int
+	balance                 int
+	climbingPoints          int
+	highShotDefenses        int
+	lowShotDefenses         int
+	colorWheelStageOneSpeed int
+	colorWheelStageTwoSpeed int
+	fouls                   int
+	techFouls               int
+	foulPoints              int
+}
+
 //RawTeamEventData gets a team's raw statistics for an event - best for putting on spreadsheets for raw comparison/printout
 
 /*All calculation functions below can be set to include or exclude certain data based on time to allow display of development of scores over time
@@ -31,6 +52,19 @@ import (
 They are also what the above functions use to get their data*/
 
 //TeamAutoBreakdown gets a team's ability to cross the auto line, ammount of balls scored in auto, auto accuracy, and ammount of points scored in auto
+//TODO: Finish this
+func TeamAutoBreakdown(competitorid, campaignid string) []int {
+	breakdown := make([]int, 4)
+	//matches is a list of the results struct
+	//TODO: Get eventid from active event on the given campaignid
+	matches := getTeamResults(campaignid, competitorid)
+	//totals the scores the team has accumulated over the matches
+	for _, match := range matches {
+		//number of auto line crosses
+		breakdown[0] += match.autoLineCrosses
+	}
+	return breakdown
+}
 
 //TeamShootingBreakdown gets a team's teleop shooting rate, shooting accuracy, ball score rate, and point score rate
 
@@ -67,6 +101,12 @@ They are also what the above functions use to get their data*/
 //RankScouterEvent
 
 //RankScouterGlobal
+
+//getTeamResults gets a list of results structs associated with the matches of a team in an event in a campaign
+func getTeamResults(eventid, teamid string) []Results {
+	results := make([]Results, 0)
+	return results
+}
 
 /*Match Census Functions determine the weight of contradictary data on the same match and return a score useable for the system*/
 //Below are differing census methods. They may or may not be used.
@@ -168,3 +208,5 @@ func mean(data []float64) float64 {
 	}
 	return total / float64(len(data))
 }
+
+//getCurrentMatch indicates data from the last match in the scouting system, especially the match number
