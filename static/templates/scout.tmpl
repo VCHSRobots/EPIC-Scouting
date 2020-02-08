@@ -1,4 +1,12 @@
 {{template "header" .HeaderData}}
-<p>Enter match data now!</p>
+<p id="test">Enter match data now!</p>
+<img></img>
+<form action="/scoutPOST">
+  Team:<br>
+  <input type="text" name="team" value="4415">
+</form>
+<button onclick="checkConnection();">Check connection!</button>
+<button onclick="makeQrCode('Hello World');">QR Code</button>
 {{/* TODO: Use one scouting route. Contents change whether mode is "match" or "pit". */}}
+<script src="js/qr.js"></script>
 {{template "footer"}}

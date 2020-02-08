@@ -8,11 +8,13 @@ import (
 	"sort"
 )
 
-type Results struct {
+type results struct {
 	//struct of the results data for a given team in a given match
 	autoLineCrosses         int
+	autoHighBalls           int
+	autoBackBalls           int
+	autoLowBalls            int
 	autoAccuracy            int
-	autoPoints              int
 	shotQuantity            int
 	shotAccuracy            int
 	fuelScored              int
@@ -51,17 +53,22 @@ type Results struct {
 /*Team scoring breakdowns return the numbers that go into calculating the factors above. They don't affect the team's overall score directly. They should be used to get a better idea of why a score is a certain value and what a robot is actually good at.
 They are also what the above functions use to get their data*/
 
-//TeamAutoBreakdown gets a team's ability to cross the auto line, ammount of balls scored in auto, auto accuracy, and ammount of points scored in auto
+//TeamAutoBreakdown gets a team's ability to cross the auto line, amount of balls scored in auto, auto accuracy, and ammount of points scored in auto
 //TODO: Finish this
 func TeamAutoBreakdown(competitorid, campaignid string) []int {
-	breakdown := make([]int, 4)
+	breakdown := make([]int, 6)
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
 	matches := getTeamResults(campaignid, competitorid)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
-		//number of auto line crosses
 		breakdown[0] += match.autoLineCrosses
+		breakdown[1] += match.autoBackBalls
+		breakdown[2] += match.autoHighBalls
+		breakdown[3] += match.autoLowBalls
+		breakdown[4] += match.autoAccuracy
+		//total auto points
+		breakdown[5] += match.autoLineCrosses*15 + match.autoBackBalls*6 + match.autoHighBalls*4 + match.autoLowBalls*2
 	}
 	return breakdown
 }
@@ -103,9 +110,9 @@ func TeamAutoBreakdown(competitorid, campaignid string) []int {
 //RankScouterGlobal
 
 //getTeamResults gets a list of results structs associated with the matches of a team in an event in a campaign
-func getTeamResults(eventid, teamid string) []Results {
-	results := make([]Results, 0)
-	return results
+func getTeamResults(eventid, teamid string) []results {
+	res := make([]results, 0)
+	return res
 }
 
 /*Match Census Functions determine the weight of contradictary data on the same match and return a score useable for the system*/
@@ -153,8 +160,6 @@ func DemocraticOutliers(data []float64) []float64 {
 	}
 	return outliers
 }
-
-func DataSize(bytes)
 
 //StatisticalOutliers - Checks for outliers outside +/-1.5 of the interquartile range
 func StatisticalOutliers(data []float64) []float64 {
