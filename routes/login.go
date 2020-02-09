@@ -22,6 +22,7 @@ func Login(c *gin.Context) {
 LoginPOST logs a user in.
 */
 func LoginPOST(c *gin.Context) {
+	HeaderData := &web.HeaderData{}
 	c.Request.ParseForm()
 	username := c.PostForm("username")
 	password := c.PostForm("password")
@@ -30,6 +31,6 @@ func LoginPOST(c *gin.Context) {
 	if loggedIn {
 		c.Redirect(http.StatusSeeOther, "/dashboard") // Although gin's method here is named Redirect, the HTTP response code used is 303. See https://en.wikipedia.org/wiki/HTTP_303 for more information.
 	} else {
-		c.HTML(200, "login.tmpl", loggedIn)
+		c.HTML(200, "login.tmpl", gin.H{"loggedIn": loggedIn, "HeaderData": HeaderData})
 	}
 }

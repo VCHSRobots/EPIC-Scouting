@@ -8,6 +8,29 @@ import (
 	"sort"
 )
 
+type results struct {
+	//struct of the results data for a given team in a given match
+	autoLineCrosses         int
+	autoHighBalls           int
+	autoBackBalls           int
+	autoLowBalls            int
+	autoAccuracy            int
+	shotQuantity            int
+	shotAccuracy            int
+	fuelScored              int
+	fuelPointsScored        int
+	climbingSpeed           int
+	balance                 int
+	climbingPoints          int
+	highShotDefenses        int
+	lowShotDefenses         int
+	colorWheelStageOneSpeed int
+	colorWheelStageTwoSpeed int
+	fouls                   int
+	techFouls               int
+	foulPoints              int
+}
+
 //RawTeamEventData gets a team's raw statistics for an event - best for putting on spreadsheets for raw comparison/printout
 
 /*All calculation functions below can be set to include or exclude certain data based on time to allow display of development of scores over time
@@ -30,7 +53,25 @@ import (
 /*Team scoring breakdowns return the numbers that go into calculating the factors above. They don't affect the team's overall score directly. They should be used to get a better idea of why a score is a certain value and what a robot is actually good at.
 They are also what the above functions use to get their data*/
 
-//TeamAutoBreakdown gets a team's ability to cross the auto line, ammount of balls scored in auto, auto accuracy, and ammount of points scored in auto
+//TeamAutoBreakdown gets a team's ability to cross the auto line, amount of balls scored in auto, auto accuracy, and ammount of points scored in auto
+//TODO: Finish this
+func TeamAutoBreakdown(competitorid, campaignid string) []int {
+	breakdown := make([]int, 6)
+	//matches is a list of the results struct
+	//TODO: Get eventid from active event on the given campaignid
+	matches := getTeamResults(campaignid, competitorid)
+	//totals the scores the team has accumulated over the matches
+	for _, match := range matches {
+		breakdown[0] += match.autoLineCrosses
+		breakdown[1] += match.autoBackBalls
+		breakdown[2] += match.autoHighBalls
+		breakdown[3] += match.autoLowBalls
+		breakdown[4] += match.autoAccuracy
+		//total auto points
+		breakdown[5] += match.autoLineCrosses*15 + match.autoBackBalls*6 + match.autoHighBalls*4 + match.autoLowBalls*2
+	}
+	return breakdown
+}
 
 //TeamShootingBreakdown gets a team's teleop shooting rate, shooting accuracy, ball score rate, and point score rate
 
@@ -67,6 +108,12 @@ They are also what the above functions use to get their data*/
 //RankScouterEvent
 
 //RankScouterGlobal
+
+//getTeamResults gets a list of results structs associated with the matches of a team in an event in a campaign
+func getTeamResults(eventid, teamid string) []results {
+	res := make([]results, 0)
+	return res
+}
 
 /*Match Census Functions determine the weight of contradictary data on the same match and return a score useable for the system*/
 //Below are differing census methods. They may or may not be used.
@@ -113,8 +160,6 @@ func DemocraticOutliers(data []float64) []float64 {
 	}
 	return outliers
 }
-
-func DataSize(bytes)
 
 //StatisticalOutliers - Checks for outliers outside +/-1.5 of the interquartile range
 func StatisticalOutliers(data []float64) []float64 {
@@ -170,3 +215,5 @@ func mean(data []float64) float64 {
 	}
 	return total / float64(len(data))
 }
+
+//getCurrentMatch indicates data from the last match in the scouting system, especially the match number

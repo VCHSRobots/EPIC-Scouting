@@ -112,8 +112,12 @@ func CheckLoginII(username, password string) (loggedIn bool) {
 	accessCheck(err)
 	var uname string
 	err = users.QueryRow("SELECT PASSWORD FROM USERS WHERE USERNAME = ?", username).Scan(&uname)
-	accessCheck(err)
+	if err != nil {
+		loggedIn = false
+		return
+	}
 	log.Debugf("Checking login for username %q", uname)
+	//TODO: login check
 	return loggedIn
 }
 
