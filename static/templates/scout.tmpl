@@ -1,12 +1,24 @@
 {{template "header" .HeaderData}}
+{{/* TODO: Use one scouting route. Contents change whether mode is "match" or "pit". */}}
+
+{{/*if .MatchScout*/}}
 <p id="test">Enter match data now!</p>
-<img></img>
-<form action="/scoutPOST">
+<form onSubmit="submitMatchData(this.form)">
   Team:<br>
   <input type="text" name="team" value="4415">
+  <input type="submit" value="Submit">
 </form>
 <button onclick="checkConnection();">Check connection!</button>
 <button onclick="makeQrCode('Hello World');">QR Code</button>
-{{/* TODO: Use one scouting route. Contents change whether mode is "match" or "pit". */}}
+{{/*end*/}}
+
+{{/*if .PitScout*/}}
+
+{{/*end*/}}
+
+<canvas id="qr" width="200" height="200"></canvas>
+
+<script src="js/qrious.js"></script>
 <script src="js/qr.js"></script>
+<script src="js/scout.js"></script>
 {{template "footer"}}

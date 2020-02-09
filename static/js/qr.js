@@ -12,14 +12,10 @@ var serializer = new XMLSerializer();
 //creates a qr of the scouting fields should the connection be lost
 function makeQrCode(dataString) {
   //creates qr code
-  var qr = new QRious();
-  alert(dataString);
-  qr.set({
-    element: document.querySelector("img"),
+  var qr = new QRious({
+    element: document.querySelector('canvas'),
     value: dataString
   });
-  alert("here");
-  qr.canvas.parentNode.appendChild(qr.image);
 }
 
 //checks if the client can connect to the server
