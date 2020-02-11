@@ -3,10 +3,71 @@
 
 {{/*if .MatchScout*/}}
 <p id="test">Enter match data now!</p>
-<form onSubmit="submitMatchData(this.form)">
-  Team:<br>
-  <input type="text" name="team" value="4415">
-  <input type="submit" value="Submit">
+<form>
+  Match:
+  <input type="text" name="match" value="1"><br>
+  Team:
+  <input type="text" name="team" value="4415"><br>
+  Autonomous:<br>
+  Crossed Auto Line?:
+  yes:<input type="radio" name="autoLineCross" value="1" checked>
+  no:<input type="radio" name="autoLineCross" value="0"><br>
+  autoHighBalls:
+  <input type="text" name="autoHighBalls" value="0"><br>
+  autoBackBalls:
+  <input type="text" name="autoBackBalls" value="0"><br>
+  autoLowBalls:
+  <input type="text" name="autoLowBalls" value="0"><br>
+  autoBallPickups:
+  <input type="text" name="autoPickups" value="0"><br>
+  Teleoperated Mode:<br>
+  Shots Taken:
+  <input type="text" name="shotQuantity" value="0"><br>
+  Low Fuel Scored:
+  <input type="text" name="lowFuel" value="0"><br>
+  High Fuel Scored:
+  <input type="text" name="highFuel" value="0"><br>
+  Back Fuel Scored:
+  <input type="text" name="backFuel" value="0"><br>
+  Color Wheel:<br>
+  Completed Stage 1?
+  yes:
+  <input type="radio" name="stageOneComplete" value="1">
+  no:
+  <input type="radio" name="stageOneComplete" value="0" checked>
+  Time:
+  <input type="text" name="stageOneTime" value="0"><br>
+  Completed Stage 2? 
+  yes:
+  <input type="radio" name="stageTwoComplete" value="1">
+  no: <input type="radio" name="stageTwoComplete" value="0" checked>
+  Time:
+  <input type="text" name="stageTwoTime" value="0"><br>
+  Fouls:<br>
+  Regular Fouls:
+  <input type="text" name="fouls" value="0"><br>
+  Tech Fouls:
+  <input type="text" name="techFouls" value="0"><br>
+  Cards:<br>
+  None:
+  <input type="radio" name="cards" value="0" checked>
+  Yellow Card:
+  <input type="radio" name="cards" value="1">
+  Red Card:
+  <input type="radio" name="cards" value="2"><br>
+  Endgame:<br>
+  Status:
+  Climbed: <input type="radio" name="climbed" value="2">
+  On Platform: <input type="radio" name="climbed" value="1" checked>
+  N/A: <input type="radio" name="climbed" value="0" checked><br>
+  Balanced?
+  yes: <input type="radio" name="balanceBool" value="yes">
+  no: <input type="radio" name="balanceBool" value="no" checked><br>
+  Time:
+  <input type="text" name="climbTime" value="4415"><br>
+  Comments:<br>
+  <input type="text" name="comments"><br>
+  <input type="button" name="button" value="Submit" onClick="submitMatchData(this.form)">
 </form>
 <button onclick="checkConnection();">Check connection!</button>
 <button onclick="makeQrCode('Hello World');">QR Code</button>
@@ -16,9 +77,10 @@
 
 {{/*end*/}}
 
-<canvas id="qr" width="200" height="200"></canvas>
+<canvas id="qr" width="400" height="400"></canvas>
 
 <script src="js/qrious.js"></script>
+<script src="js/papaparse.js"></script>
 <script src="js/qr.js"></script>
 <script src="js/scout.js"></script>
 {{template "footer"}}

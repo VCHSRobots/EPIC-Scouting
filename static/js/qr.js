@@ -2,9 +2,6 @@
 qr.js backup system for data transfer if the client cannot connect to the server
 */
 
-//this is the trouble line
-//import {QRious} from "js/qrious.js";
-
 var connected = false;
 var parser = new DOMParser();
 var serializer = new XMLSerializer();
