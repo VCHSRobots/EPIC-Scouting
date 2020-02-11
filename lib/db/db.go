@@ -3,12 +3,15 @@ package db
 
 import (
 	"EPIC-Scouting/lib/lumberjack"
+	"crypto/rand"
+	"fmt"
 
 	"database/sql"
 	"os"
 
-	// TODO: Golint needs to stop complaining about this import. >:[
+	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var log = lumberjack.New("DB")
@@ -120,7 +123,7 @@ func CheckLoginII(username, password string) (loggedIn bool) {
 
 /*
 CreateUser creates a new user.
-
+*/
 func CreateUser(databasePath, username, password, firstname, lastname, email, phone, usertype string) {
 	fmt.Printf("Creating user %s\n", username)
 	users, err := sql.Open("sqlite3", databasePath+"users.db")
@@ -143,17 +146,17 @@ func CreateUser(databasePath, username, password, firstname, lastname, email, ph
 
 /*
 CreateCampaign TODO.
-
-func CreateCampaign(databasePath, agentid, owner, name string) {
+*/
+func CreateCampaign(DatabasePath, agentid, owner, name string) {
 	// TODO: Clone global campaigns to team-specific campaign if requested.
 	// Only sysadmin can create global campaigns.
-	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+	campaigns, err := sql.Open("sqlite3", DatabasePath+"campaigns.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
 	}
 	//Check if user is authorized to create campaigns
-	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	usersDb, err := sql.Open("sqlite3", DatabasePath+"users.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
@@ -173,16 +176,16 @@ func CreateCampaign(databasePath, agentid, owner, name string) {
 }
 
 //CreateMatch adds a mach to the match table in the campaign database
-func CreateMatch(databasePath, agentid, eventid, matchnumber, starttime, endtime string) {
+func CreateMatch(DatabasePath, agentid, eventid, matchnumber, starttime, endtime string) {
 	//TODO: Adds a match to a campaign
 	//TODO: Adds event to campaign table
-	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+	campaigns, err := sql.Open("sqlite3", DatabasePath+"campaigns.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
 	}
 	//Check to see the team who owns the match's campaign tied to the event the match is connected to. If the campaign is not write accessable to the agent, deny access
-	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	usersDb, err := sql.Open("sqlite3", DatabasePath+"users.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
@@ -206,15 +209,15 @@ func CreateMatch(databasePath, agentid, eventid, matchnumber, starttime, endtime
 }
 
 //CreateEvent adds an event to the event table in the campaigns database
-func CreateEvent(databasePath, agentid, campaignid, name, location, starttime, endtime string) {
+func CreateEvent(DatabasePath, agentid, campaignid, name, location, starttime, endtime string) {
 	//TODO: Adds event to campaign table
-	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+	campaigns, err := sql.Open("sqlite3", DatabasePath+"campaigns.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
 	}
 	//Check to see if agent has write access to the campaign. If not, deny access
-	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	usersDb, err := sql.Open("sqlite3", DatabasePath+"users.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
@@ -239,17 +242,17 @@ func CreateEvent(databasePath, agentid, campaignid, name, location, starttime, e
 /*
 CreateTeam TODO
 
-func CreateTeam(databasePath, agentid, number, name, currentcampaign string) {
+func CreateTeam(DatabasePath, agentid, number, name, currentcampaign string) {
 	// TODO
 	// Req: TeamNumber, TeamName, etc
 	//TODO: Adds event to campaign table
-	teams, err := sql.Open("sqlite3", databasePath+"teams.db")
+	teams, err := sql.Open("sqlite3", DatabasePath+"teams.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
 	}
 	//Check to see if agent is a valid user
-	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	usersDb, err := sql.Open("sqlite3", DatabasePath+"users.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
@@ -267,7 +270,7 @@ func CreateTeam(databasePath, agentid, number, name, currentcampaign string) {
 	}
 	log.Debugf("Created team: %s", id.String())
 	// If a team's number exists in campaigns/competitors, their competitorid is their new teamid. If a team's number exists in teams/teams, any reference to their competitorid in campaigns/competitors is their teamid.
-	retconCompetitorID(number, fmt.Sprint(id), databasePath)
+	retconCompetitorID(number, fmt.Sprint(id), DatabasePath)
 }
 
 /*
@@ -278,7 +281,7 @@ mplate "footer"}}ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 		return
 	}
 	//Check to see if agent is a valid user
-	usersDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	usersDb, err := sql.Open("sqlite3", DatabasePath+"users.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
@@ -295,7 +298,7 @@ mplate "footer"}}ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 		log.Fatal("Unable to open or create database: " + err.Error())
 	}
 	log.Debugf("Created event: %s", id.String())
-}
+}*/
 
 func getCampaignOwner(campaignid string, db *sql.DB) string {
 	campaignids := processQuery(db.Query("SELECT campaignid FROM campaigns;"))
@@ -303,7 +306,6 @@ func getCampaignOwner(campaignid string, db *sql.DB) string {
 	return correlateFields(campaignid, campaignids, owners)
 }
 
-/*
 func processQuery(rows *sql.Rows, err error) []string {
 	ind := 0
 	outputs := make([]string, 0)
@@ -318,7 +320,6 @@ func processQuery(rows *sql.Rows, err error) []string {
 	}
 	return outputs
 }
-
 
 func checkUserType(userid string, db *sql.DB) string {
 	userids := processQuery(db.Query("SELECT userid FROM users;"))
@@ -338,9 +339,9 @@ func getEventCampaign(eventid string, db *sql.DB) string {
 	return correlateFields(eventid, eventids, campaignids)
 }
 
-func retconCompetitorID(teamnumber, teamid, databasePath string) {
+func retconCompetitorID(teamnumber, teamid, DatabasePath string) {
 	//Replaces all references to a competitor team with their proper team id that matches with the teams table
-	campaigns, err := sql.Open("sqlite3", databasePath+"campaigns.db")
+	campaigns, err := sql.Open("sqlite3", DatabasePath+"campaigns.db")
 	if err != nil {
 		log.Fatal("Unable to open or create database: " + err.Error())
 		return
@@ -402,16 +403,15 @@ func GetUserSaltedPassword(password, id string, userDb *sql.DB) string {
 
 //GetUserPasswordHash gets the password hash for a specific user's password
 func GetUserPasswordHash(id string) []byte {
-	userDb, err := sql.Open("sqlite3", databasePath+"users.db")
+	userDb, err := sql.Open("sqlite3", DatabasePath+"users.db")
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Unable to create or open database: %s", databasePath+"users.db"))
+		log.Fatal(fmt.Sprintf("Unable to create or open database: %s", DatabasePath+"users.db"))
 	}
 	userids := processQuery(userDb.Query("SELECT userid FROM users"))
 	passwords := processQuery(userDb.Query("SELECT password FROM users"))
 	hash := []byte(correlateFields(id, userids, passwords))
 	return hash
 }
-*/
 
 /*
 WriteResults TODO
@@ -424,14 +424,14 @@ func WriteResults() {
 /*
 GetCampaigns global or team.
 
-func GetCampaigns(databasePath, agentid, campaignid, teamid string) {
+func GetCampaigns(DatabasePath, agentid, campaignid, teamid string) {
 	// TODO: Load a list of global or team-specific campaigns. Check perms for the latter.
 }
 
 /*
 WorkCampaign TODO.
 
-func WorkCampaign(databasePath, agentid, teamid, campaignid string) {
+func WorkCampaign(DatabasePath, agentid, teamid, campaignid string) {
 	// TODO: Set a team to work on a campaign. Check perms.
 }
 
