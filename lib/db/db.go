@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	// Blank import of go-sqlite3 here is intentional.
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -22,7 +23,31 @@ DatabasePath is the path to the directory which holds the databases.
 var DatabasePath string
 
 /*
-TouchBase creates all databases used by the server if they do not exist.
+Schedule describes the current Campaign / Event / Match a team is contributing to.
+*/
+type Schedule struct {
+	matchID string
+}
+
+/*
+UserData describes all of the elements which describe a user of the scouting system.
+*/
+type UserData struct {
+	userID      string
+	userName    string
+	password    string
+	firstName   string
+	lastName    string
+	contactInfo struct {
+		email string
+		phone string
+		other string
+	}
+	sysAdmin bool
+}
+
+/*
+TouchBase creates all databases used by the server if they do not exist, along with the default SysAdmin team and user.
 Its name is a play on the GNU program "touch", the idiom "[to] touch base", and the word "database". The author is rather proud of this.
 */
 func TouchBase(databasePath string) {
@@ -36,31 +61,30 @@ func TouchBase(databasePath string) {
 	err := os.MkdirAll(DatabasePath, 0755)
 	accessCheck(err)
 
-	// Users
-	// This database stores all users.
+	// Users.
 	users := newDatabase("users")
 	users.Exec("CREATE TABLE IF NOT EXISTS users ( userid TEXT PRIMARY KEY UNIQUE NOT NULL, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, firstname TEXT, lastname TEXT, email TEXT UNIQUE, phone TEXT, usertype TEXT, salt TEXT)") // TODO: Add support for N+ contact options; via linked table?
+	users.Exec("CREATE TABLE IF NOT EXISTS sysadmins ( userid TEXT PRIMARY KEY UNISUE NOT NULL )")                                                                                                                                           // List of users which are SysAdmins.
 
-	// TODO: Create a SYSTEM team which makes the default public campaigns each season.
+	users.Exec("INSERT INTO users VALUES ()") // Create default SysAdmin user if it does not exist.
 
-	// Scouting teams
+	// Scouting teams.
 	teams := newDatabase("teams")
 	teams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL, schedule TEXT NOT NULL )")                                                                                     // A team.
 	teams.Exec("CREATE TABLE IF NOT EXISTS members ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL, usertype TEXT NOT NULL )")                                                                                                            // The members on a team. UserType is either member or admin.
 	teams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                                                                                                              // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
 	teams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL, stats )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
 
-	// Campaigns (game seasons / years)
-	// This database stores the expected campaign / event / match schedule and data, and expected competing teams. Data pulled from TBA.
+	// Campaigns.
 	campaigns := newDatabase("campaigns")
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS campaigns ( campaignid TEXT PRIMARY KEY UNIQUE NOT NULL, owner TEXT NOT NULL, name TEXT NOT NULL )")                                      // TODO: Add more information about each campaign. Campaign owner is a teamid. If campaign owner is all zeros, campaign is global.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS events ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, name TEXT NOT NULL, location TEXT, starttime TEXT, endtime TEXT )") // TODO: Add more information about each event.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS matches ( eventid TEXT PRIMARY KEY NOT NULL, matchid TEXT UNIQUE NOT NULL, matchnumber INTEGER NOT NULL, starttime TEXT, endtime TEXT )") // TODO: Add more information about each match.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS participants ( matchid TEXT PRIMARY KEY NOT NULL, competitorid TEXT UNIQUE NOT NULL) ")                                                   // The participants in each match.
 	campaigns.Exec("CREATE TABLE IF NOT EXISTS competitors ( competitorid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL )")                                   // TODO: Add more information about each competing team.
-
-	// TODO: Teams need a way to weight each of their competitors.
 }
+
+// TODO: Teams need a way to weight each of their competitors when assigning teams via the scheduler.
 
 /*
 CheckLogin checks if a user has a valid login and returns their data (sans their password) if they do.
@@ -105,9 +129,9 @@ func CheckLogin(username, password string) (bool, []string) {
 */
 
 /*
-CheckLoginII is an attempt at re-creating CheckLogin with different SQL queries.
+UserLogin returns true if the username and password exist in the users database. Otherwise returns false.
 */
-func CheckLoginII(username, password string) (loggedIn bool) {
+func UserLogin(username, password string) (loggedIn bool) {
 	users, err := sql.Open("sqlite3", DatabasePath+"users.db")
 	accessCheck(err)
 	var uname string
@@ -122,15 +146,12 @@ func CheckLoginII(username, password string) (loggedIn bool) {
 }
 
 /*
-CreateUser creates a new user.
+UserCreate creates a new user.
 */
-func CreateUser(databasePath, username, password, firstname, lastname, email, phone, usertype string) {
+func UserCreate(username, password, firstname, lastname, email, phone, usertype string) {
 	fmt.Printf("Creating user %s\n", username)
-	users, err := sql.Open("sqlite3", databasePath+"users.db")
-	if err != nil {
-		log.Fatal("Unable to open or create database: " + err.Error())
-		return
-	}
+	users, err := sql.Open("sqlite3", DatabasePath+"users.db")
+	accessCheck(err)
 	id := uuid.New()
 	//make hash for password with added salt of len 256
 	//salt comes out as a printed array of integers because sql doesn't like the random bytes converted to strings. it looks odd when you print it out but it works.
@@ -142,6 +163,20 @@ func CreateUser(databasePath, username, password, firstname, lastname, email, ph
 		log.Info("Unable to create user: " + err.Error())
 	}
 	log.Debugf("Created user: '%s'", id.String())
+}
+
+/*
+UserModify modifies an existing user account.
+*/
+func ModifyUser(userID string, data interface{}) {
+
+}
+
+/*
+UserQuery returns the user's information.
+*/
+func UserQuery(userID) {
+
 }
 
 /*
@@ -175,7 +210,9 @@ func CreateCampaign(DatabasePath, agentid, owner, name string) {
 	log.Debugf("Created campaign '%s'", id)
 }
 
-//CreateMatch adds a mach to the match table in the campaign database
+/*
+CreateMatch adds a mach to the match table in the campaign database
+*/
 func CreateMatch(DatabasePath, agentid, eventid, matchnumber, starttime, endtime string) {
 	//TODO: Adds a match to a campaign
 	//TODO: Adds event to campaign table
@@ -203,6 +240,7 @@ func CreateMatch(DatabasePath, agentid, eventid, matchnumber, starttime, endtime
 	_, err = campaigns.Exec(fmt.Sprintf("INSERT INTO matches (matchid, eventid, matchnumber, starttime, endtime) VALUES ('%s', '%s', '%s', '%s', '%s');", id, eventid, matchnumber, starttime, endtime))
 	// Throw if doing something illegal, such as overwriting existing
 	if err != nil {
+		schedule
 		log.Fatal("Unable to open or create database: " + err.Error())
 	}
 	log.Debugf("Created match: '%s'", id.String())
@@ -375,7 +413,7 @@ func correlateFields(term string, searchfield, resultfield []string) string {
 }
 
 func hashNewPassword(password, id string) ([]byte, string) {
-	//always hashes passwords with a 256 byte salt
+	// Always hashes passwords with a 256 byte salt.
 	salt := [256]byte{}
 	_, err := rand.Read(salt[:])
 	if err != nil {
