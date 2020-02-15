@@ -12,23 +12,39 @@
   Crossed Auto Line?:
   yes:<input type="radio" name="autoLineCross" value="1" checked>
   no:<input type="radio" name="autoLineCross" value="0"><br>
-  autoHighBalls:
-  <input type="text" name="autoHighBalls" value="0"><br>
-  autoBackBalls:
-  <input type="text" name="autoBackBalls" value="0"><br>
-  autoLowBalls:
-  <input type="text" name="autoLowBalls" value="0"><br>
-  autoBallPickups:
-  <input type="text" name="autoPickups" value="0"><br>
+  High Balls:
+  <input type="text" name="autoHighBalls" value="0">
+  <input type="button" name="ahbinc", value="+" onClick="this.form.autoHighBalls.value++">
+  <input type="button" name="ahbdec", value="-" onClick="this.form.autoHighBalls.value--"><br>
+  Back Balls:
+  <input type="text" name="autoBackBalls" value="0">
+  <input type="button" name="abbinc", value="+" onClick="this.form.autoBackBalls.value++">
+  <input type="button" name="abbdec", value="-" onClick="this.form.autoBackBalls.value--"><br>
+  Low Balls:
+  <input type="text" name="autoLowBalls" value="0">
+  <input type="button" name="albinc", value="+" onClick="this.form.autoLowBalls.value++">
+  <input type="button" name="albdec", value="-" onClick="this.form.autoLowBalls.value--"><br>
+  Ball Pickups:
+  <input type="text" name="autoPickups" value="0">
+  <input type="button" name="apinc", value="+" onClick="this.form.autoPickups.value++">
+  <input type="button" name="apdec", value="-" onClick="this.form.autoPickups.value--"><br>
   Teleoperated Mode:<br>
   Shots Taken:
-  <input type="text" name="shotQuantity" value="0"><br>
+  <input type="text" name="shotQuantity" value="0">
+  <input type="button" name="sqinc", value="+" onClick="this.form.shotQuantity.value++">
+  <input type="button" name="sqdec", value="-" onClick="this.form.shotQuantity.value--"><br>
   Low Fuel Scored:
-  <input type="text" name="lowFuel" value="0"><br>
+  <input type="text" name="lowFuel" value="0">
+  <input type="button" name="lfinc", value="+" onClick="this.form.lowFuel.value++">
+  <input type="button" name="lfdec", value="-" onClick="this.form.lowFuel.value--"><br>
   High Fuel Scored:
-  <input type="text" name="highFuel" value="0"><br>
+  <input type="text" name="highFuel" value="0">
+  <input type="button" name="hfinc", value="+" onClick="this.form.highFuel.value++">
+  <input type="button" name="hfdec", value="-" onClick="this.form.highFuel.value--"><br>
   Back Fuel Scored:
-  <input type="text" name="backFuel" value="0"><br>
+  <input type="text" name="backFuel" value="0">
+  <input type="button" name="bfinc", value="+" onClick="this.form.backFuel.value++">
+  <input type="button" name="bfdec", value="-" onClick="this.form.backFuel.value--"><br>
   Color Wheel:<br>
   Completed Stage 1?
   yes:
@@ -36,18 +52,26 @@
   no:
   <input type="radio" name="stageOneComplete" value="0" checked>
   Time:
-  <input type="text" name="stageOneTime" value="0"><br>
+  <input type="text" name="stageOneTime" value="0">
+  <input type="button" name="soinc", value="+" onClick="this.form.stageOneTime.value++">
+  <input type="button" name="sodec", value="-" onClick="this.form.stageOneTime.value--"><br>
   Completed Stage 2? 
   yes:
   <input type="radio" name="stageTwoComplete" value="1">
   no: <input type="radio" name="stageTwoComplete" value="0" checked>
   Time:
-  <input type="text" name="stageTwoTime" value="0"><br>
+  <input type="text" name="stageTwoTime" value="0">
+  <input type="button" name="stinc", value="+" onClick="this.form.stageTwoTime.value++">
+  <input type="button" name="stdec", value="-" onClick="this.form.stageTwoTime.value--"><br>
   Fouls:<br>
   Regular Fouls:
-  <input type="text" name="fouls" value="0"><br>
+  <input type="text" name="fouls" value="0">
+  <input type="button" name="finc", value="+" onClick="this.form.fouls.value++">
+  <input type="button" name="fdec", value="-" onClick="this.form.fouls.value--"><br>
   Tech Fouls:
-  <input type="text" name="techFouls" value="0"><br>
+  <input type="text" name="techFouls" value="0">
+  <input type="button" name="tfinc", value="+" onClick="this.form.techFouls.value++">
+  <input type="button" name="tfdec", value="-" onClick="this.form.techFouls.value--"><br>
   Cards:<br>
   None:
   <input type="radio" name="cards" value="0" checked>
@@ -64,7 +88,9 @@
   yes: <input type="radio" name="balanceBool" value="yes">
   no: <input type="radio" name="balanceBool" value="no" checked><br>
   Time:
-  <input type="text" name="climbTime" value="4415"><br>
+  <input type="text" name="climbTime" value="4415">
+  <input type="button" name="ctinc", value="+" onClick="this.form.climbTime.value++">
+  <input type="button" name="ctdec", value="-" onClick="this.form.climbTime.value--"><br>
   Comments:<br>
   <input type="text" name="comments"><br>
   <input type="button" name="button" value="Submit" onClick="submitMatchData(this.form)">
