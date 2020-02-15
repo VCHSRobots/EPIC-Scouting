@@ -10,25 +10,25 @@ import (
 
 type results struct {
 	//struct of the results data for a given team in a given match
-	autoLineCrosses         int
+	autoLineCross           int
 	autoHighBalls           int
 	autoBackBalls           int
 	autoLowBalls            int
-	autoAccuracy            int
-	shotQuantity            int
-	shotAccuracy            int
-	fuelScored              int
-	fuelPointsScored        int
-	climbingSpeed           int
+	autoShots               int
+	autoBallPickups         int
+	shots                   int
+	lowFuel                 int
+	highFuel                int
+	backFuel                int
+	climbStatus             int
+	climbSpeed              int
 	balance                 int
-	climbingPoints          int
-	highShotDefenses        int
-	lowShotDefenses         int
+	defenses                int
 	colorWheelStageOneSpeed int
 	colorWheelStageTwoSpeed int
 	fouls                   int
 	techFouls               int
-	foulPoints              int
+	card                    int
 }
 
 //RawTeamEventData gets a team's raw statistics for an event - best for putting on spreadsheets for raw comparison/printout
@@ -56,36 +56,96 @@ They are also what the above functions use to get their data*/
 //TeamAutoBreakdown gets a team's ability to cross the auto line, amount of balls scored in auto, auto accuracy, and ammount of points scored in auto
 //TODO: Finish this
 func TeamAutoBreakdown(competitorid, campaignid string) []int {
-	breakdown := make([]int, 6)
+	breakdown := make([]int, 8)
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
 	matches := getTeamResults(campaignid, competitorid)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
-		breakdown[0] += match.autoLineCrosses
+		breakdown[0] += match.autoLineCross
 		breakdown[1] += match.autoBackBalls
 		breakdown[2] += match.autoHighBalls
 		breakdown[3] += match.autoLowBalls
-		breakdown[4] += match.autoAccuracy
+		breakdown[4] += match.autoShots
+		breakdown[5] += match.autoBallPickups
+		breakdown[6] += (match.autoBackBalls + match.autoHighBalls) / (match.autoShots - match.autoLowBalls)
 		//total auto points
-		breakdown[5] += match.autoLineCrosses*15 + match.autoBackBalls*6 + match.autoHighBalls*4 + match.autoLowBalls*2
+		breakdown[7] += match.autoLineCross*15 + match.autoBackBalls*6 + match.autoHighBalls*4 + match.autoLowBalls*2
 	}
 	return breakdown
 }
 
 //TeamShootingBreakdown gets a team's teleop shooting rate, shooting accuracy, ball score rate, and point score rate
+func TeamShootingBreakdown(competitorid, campaignid string) []int {
+	breakdown := make([]int, 7)
+	//matches is a list of the results struct
+	//TODO: Get eventid from active event on the given campaignid
+	matches := getTeamResults(campaignid, competitorid)
+	//totals the scores the team has accumulated over the matches
+	for _, match := range matches {
+		breakdown[0] += match.shots
+		breakdown[1] += match.lowFuel
+		breakdown[2] += match.highFuel
+		breakdown[3] += match.backFuel
+		breakdown[4] += (match.highFuel + match.backFuel) / (match.shots - match.lowFuel)
+		breakdown[5] = match.lowFuel + match.highFuel + match.backFuel
+		//total auto points
+		breakdown[6] += match.lowFuel*1 + match.highFuel*2 + match.backFuel*3
+	}
+	return breakdown
+}
 
 //TeamClimbingBreakdown gets a team's average climbing speed, ability to balance the bar, and average points scored for climbing
+func TeamClimbingBreakdown(competitorid, campaignid string) []int {
+	breakdown := make([]int, 3)
+	//matches is a list of the results struct
+	//TODO: Get eventid from active event on the given campaignid
+	matches := getTeamResults(campaignid, competitorid)
+	//totals the scores the team has accumulated over the matches
+	for _, match := range matches {
+		breakdown[0] += match.climbStatus
+		breakdown[1] += match.climbSpeed
+		breakdown[2] += match.balance
+	}
+	return breakdown
+}
 
 //TeamDefenceToleranceBreakdown gets how many times a robot has been defended successfully and unseccesfully, and how many points are lost due to defense
 
 //TeamDefenceBreakdown gets how many times and how many points a team takes away from their opponent in defending
 
 //TeamColorWheelBreakdown gets how quickly a team can do stage 1 and 2 of the color wheel, along with whether they can do it at all
+func TeamColorWheelBreakdown(competitorid, campaignid string) []int {
+	breakdown := make([]int, 7)
+	//matches is a list of the results struct
+	//TODO: Get eventid from active event on the given campaignid
+	matches := getTeamResults(campaignid, competitorid)
+	//totals the scores the team has accumulated over the matches
+	for _, match := range matches {
+		breakdown[0] += match.colorWheelStageOneSpeed
+		breakdown[1] += match.colorWheelStageTwoSpeed
+	}
+	return breakdown
+}
 
-//TeamPenaltyBreakdown gets how many times a team has recieved regular fouls, tech fouls, and yellow cards, along with the total amount of points lost by them to fouls
+//TeamFoulBreakdown gets how many times a team has recieved regular fouls, tech fouls, and yellow cards, along with the total amount of points lost by them to fouls
+func TeamFoulBreakdown(competitorid, campaignid string) []int {
+	breakdown := make([]int, 7)
+	//matches is a list of the results struct
+	//TODO: Get eventid from active event on the given campaignid
+	matches := getTeamResults(campaignid, competitorid)
+	//totals the scores the team has accumulated over the matches
+	for _, match := range matches {
+		breakdown[0] += match.fouls
+		breakdown[1] += match.techFouls
+		breakdown[2] += match.fouls*3 + match.techFouls*15
+		//0=no card, 1=yellow card, 2=red card
+		breakdown[3] += match.card
+	}
+	return breakdown
+}
 
-//Team Overall Scoring and Ranking gives teams conglomerate scores such as OPR, DPR, and overall ranking
+//Team Overall Scoring and Ranking functions give teams conglomerate scores such as OPR, DPR, and overall ranking
 
 //TeamOPR gives a team an overall offensive rating
 
