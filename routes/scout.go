@@ -1,7 +1,9 @@
 package routes
 
 import (
-	"fmt"
+	"EPIC-Scouting/lib/web"
+	"strings"
+
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,16 +18,31 @@ type MatchData struct {
 Scout shows the scout page.
 */
 func Scout(c *gin.Context) {
-	c.HTML(http.StatusOK, "scout.tmpl", nil)
+	querytype := c.Query("type")
+	if querytype == "match" {
+		HeaderData := &web.HeaderData{Title: "Match Scouting", StyleSheets: []string{"global"}}
+		c.HTML(http.StatusOK, "scout.tmpl", gin.H{"HeaderData": HeaderData, "MatchScout": true})
+	} else if querytype == "pit" {
+		HeaderData := &web.HeaderData{Title: "Pit Scouting", StyleSheets: []string{"global"}}
+		c.HTML(http.StatusOK, "scout.tmpl", gin.H{"HeaderData": HeaderData, "PitScout": true})
+	} else {
+		HeaderData := &web.HeaderData{Title: "Scouting?", StyleSheets: []string{"global"}}
+		c.HTML(http.StatusOK, "scout.tmpl", gin.H{"HeaderData": HeaderData, "nope": true})
+	}
 }
 
 //MatchPOST processes and stores scouting data from a match
 func MatchPOST(c *gin.Context) {
 	var data MatchData
 	c.ShouldBindJSON(&data)
-	postData := data.Data[0]
-	for _, str := range postData {
-		fmt.Println(str)
+	//postData := data.Data[0]
+	//gets uuid to associate with data
+	usercookie, _ := c.Cookie("login")
+	if usercookie != "" {
+		uuid := strings.Fields(usercookie)[0]
+		println(uuid)
+	} else {
+		Forbidden(c)
 	}
 }
 

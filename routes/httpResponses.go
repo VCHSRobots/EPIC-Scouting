@@ -12,7 +12,7 @@ import (
 Unauthorized (401).
 */
 func Unauthorized(c *gin.Context) {
-	HeaderData := &web.HeaderData{Title: "401: Unauthorized", StyleSheets: []string{"/css/error.css"}}
+	HeaderData := &web.HeaderData{Title: "401: Unauthorized", StyleSheets: []string{"error"}}
 	c.HTML(http.StatusUnauthorized, "401.tmpl", gin.H{"HeaderData": HeaderData})
 }
 
@@ -20,7 +20,7 @@ func Unauthorized(c *gin.Context) {
 Forbidden (403).
 */
 func Forbidden(c *gin.Context) {
-	HeaderData := &web.HeaderData{Title: "403: Forbidden", StyleSheets: []string{"/css/error.css"}}
+	HeaderData := &web.HeaderData{Title: "403: Forbidden", StyleSheets: []string{"error"}}
 	c.HTML(http.StatusForbidden, "403.tmpl", gin.H{"HeaderData": HeaderData})
 }
 
@@ -52,5 +52,5 @@ func InternalServerError(c *gin.Context, err interface{}) {
 	HeaderData := &web.HeaderData{Title: "500: Internal server error", StyleSheets: []string{"error"}}
 	data := &internalServerErrorData{HeaderData: HeaderData, Error: err}
 	c.HTML(http.StatusInternalServerError, "500.tmpl", data)
-	log.Warnf("Internal server error: %q", err)
+	log.Errorf("Internal server error: %q", err)
 }

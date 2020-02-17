@@ -13,7 +13,7 @@ import (
 Login shows the login page.
 */
 func Login(c *gin.Context) {
-	HeaderData := &web.HeaderData{}
+	HeaderData := &web.HeaderData{Title: "Login", StyleSheets: []string{"global"}}
 	loggedIn := true
 	c.HTML(http.StatusOK, "login.tmpl", gin.H{"loggedIn": loggedIn, "HeaderData": HeaderData})
 }
@@ -22,15 +22,21 @@ func Login(c *gin.Context) {
 LoginPOST logs a user in.
 */
 func LoginPOST(c *gin.Context) {
-	HeaderData := &web.HeaderData{}
+	HeaderData := &web.HeaderData{Title: "Login", StyleSheets: []string{"global"}}
 	c.Request.ParseForm()
 	username := c.PostForm("username")
 	password := c.PostForm("password")
-	loggedIn := db.CheckLoginII(username, password)
-	fmt.Println(loggedIn)
-	if loggedIn {
+	//The login function returns the uuid but returns a blank string if it fails
+	loggedIn, _ := db.UserLogin(username, password)
+	uuid := "helloworld"
+	if uuid != "" && loggedIn {
+		//should cookie store if user has sysadmin?
+		cookie := fmt.Sprintf("%s %s", uuid, username)
+		//secure cannot be set to true until we get http working
+		//TODO: put in actual site domain
+		c.SetCookie("login", cookie, 3600, "/", "", http.SameSiteLaxMode, false, false)
 		c.Redirect(http.StatusSeeOther, "/dashboard") // Although gin's method here is named Redirect, the HTTP response code used is 303. See https://en.wikipedia.org/wiki/HTTP_303 for more information.
 	} else {
-		c.HTML(200, "login.tmpl", gin.H{"loggedIn": loggedIn, "HeaderData": HeaderData})
+		c.HTML(200, "login.tmpl", gin.H{"loggedIn": false, "HeaderData": HeaderData})
 	}
 }

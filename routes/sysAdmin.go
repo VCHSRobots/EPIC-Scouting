@@ -12,7 +12,7 @@ import (
 SysAdmin shows the SysAdmin page.
 */
 func SysAdmin(c *gin.Context) {
-	HeaderData := &web.HeaderData{}
+	HeaderData := &web.HeaderData{Title: "Super Secret Sysadmin Bunker", StyleSheets: []string{"global"}}
 	sizes := db.GetDatabaseSize()
 	var DatabaseSizes []string
 	var totalSize float64 = 0

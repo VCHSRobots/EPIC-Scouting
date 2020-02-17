@@ -13,7 +13,6 @@ function submitMatchData(form) {
   checkConnection();
   if (connected) {
     var jsonstring = JSON.stringify(Papa.parse(csvstring));
-    alert(jsonstring);
     xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/matchPOST", true);
     xhttp.send(jsonstring);
@@ -23,16 +22,7 @@ function submitMatchData(form) {
   //}
 }
 
-function timeout() {
-
-}
-
 function submitPitData(form) {
   //Try to post the data to the server
   //If that fails, prepare QR Code
-}
-
-//displays qr code based on whether the post succeded or not
-function handleData() {
-
 }

@@ -1,6 +1,6 @@
 body {
     background-color: #eceff1;
-    font-family: sans-serif;
+    font-family: verdana;
     margin: auto;
 }
 
@@ -18,10 +18,36 @@ img {
 
 p {
     margin: 6px;
+    font-size: 16px;
+}
+
+label {
+    font-family: verdana;
+    font-size: 12;
 }
 
 .code {
-    font-family: monospace;
+    font-family: verdana;
+}
+
+.warning {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+.warning {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+.warning {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+.warning {
+    color: #ff0000;
+    font-weight: bold;
 }
 
 .info:hover {

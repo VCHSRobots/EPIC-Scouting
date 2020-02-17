@@ -1,109 +1,130 @@
 {{template "header" .HeaderData}}
 {{/* TODO: Use one scouting route. Contents change whether mode is "match" or "pit". */}}
 
-{{/*if .MatchScout*/}}
+{{if .MatchScout}}
 <p id="test">Enter match data now!</p>
 <form>
-  Match:
+  <label for="match">Match:</label>
   <input type="text" name="match" value="1"><br>
-  Team:
+  <label for="team">Team:</label>
   <input type="text" name="team" value="4415"><br>
-  Autonomous:<br>
-  Crossed Auto Line?:
+  <label>Autonomous:<br></label>
+  <label for="autoLineCross">Crossed Auto Line?:</label>
   yes:<input type="radio" name="autoLineCross" value="1" checked>
   no:<input type="radio" name="autoLineCross" value="0"><br>
-  High Balls:
+  <label for="autoHighBalls">High Balls:</label>
   <input type="text" name="autoHighBalls" value="0">
   <input type="button" name="ahbinc", value="+" onClick="this.form.autoHighBalls.value++">
   <input type="button" name="ahbdec", value="-" onClick="this.form.autoHighBalls.value--"><br>
-  Back Balls:
+  <label for="autoBackBalls">Back Balls:</label>
   <input type="text" name="autoBackBalls" value="0">
   <input type="button" name="abbinc", value="+" onClick="this.form.autoBackBalls.value++">
   <input type="button" name="abbdec", value="-" onClick="this.form.autoBackBalls.value--"><br>
-  Low Balls:
+  <label for="autoLowBalls">Low Balls:</label>
   <input type="text" name="autoLowBalls" value="0">
   <input type="button" name="albinc", value="+" onClick="this.form.autoLowBalls.value++">
   <input type="button" name="albdec", value="-" onClick="this.form.autoLowBalls.value--"><br>
-  Ball Pickups:
+  <label for="autoPickups">Ball Pickups:</label>
   <input type="text" name="autoPickups" value="0">
   <input type="button" name="apinc", value="+" onClick="this.form.autoPickups.value++">
   <input type="button" name="apdec", value="-" onClick="this.form.autoPickups.value--"><br>
-  Teleoperated Mode:<br>
-  Shots Taken:
+  <label>Teleoperated Mode:<br></label>
+  <label for="shotQuantity">Shots Taken:</label>
   <input type="text" name="shotQuantity" value="0">
   <input type="button" name="sqinc", value="+" onClick="this.form.shotQuantity.value++">
   <input type="button" name="sqdec", value="-" onClick="this.form.shotQuantity.value--"><br>
-  Low Fuel Scored:
+  <label for="lowFuel">Low Fuel Scored:</label>
   <input type="text" name="lowFuel" value="0">
   <input type="button" name="lfinc", value="+" onClick="this.form.lowFuel.value++">
   <input type="button" name="lfdec", value="-" onClick="this.form.lowFuel.value--"><br>
-  High Fuel Scored:
+  <label for="highFuel">High Fuel Scored:</label>
   <input type="text" name="highFuel" value="0">
   <input type="button" name="hfinc", value="+" onClick="this.form.highFuel.value++">
   <input type="button" name="hfdec", value="-" onClick="this.form.highFuel.value--"><br>
-  Back Fuel Scored:
+  <label for="backFuel">Back Fuel Scored:</label>
   <input type="text" name="backFuel" value="0">
   <input type="button" name="bfinc", value="+" onClick="this.form.backFuel.value++">
   <input type="button" name="bfdec", value="-" onClick="this.form.backFuel.value--"><br>
-  Color Wheel:<br>
-  Completed Stage 1?
-  yes:
+  <label>Color Wheel:<br></label>
+  <label for="stageOneComplete">Completed Stage 1?
+  yes:</label>
   <input type="radio" name="stageOneComplete" value="1">
-  no:
+  <label for="stageOneComplete">no:</label>
   <input type="radio" name="stageOneComplete" value="0" checked>
-  Time:
+  <label>Time:</label>
   <input type="text" name="stageOneTime" value="0">
   <input type="button" name="soinc", value="+" onClick="this.form.stageOneTime.value++">
   <input type="button" name="sodec", value="-" onClick="this.form.stageOneTime.value--"><br>
-  Completed Stage 2? 
-  yes:
+  <label for="stageTwoComplete">Completed Stage 2? 
+  yes:</label>
   <input type="radio" name="stageTwoComplete" value="1">
-  no: <input type="radio" name="stageTwoComplete" value="0" checked>
-  Time:
+  <label>no: </label>
+  <input type="radio" name="stageTwoComplete" value="0" checked>
+  <label>Time:</label>
   <input type="text" name="stageTwoTime" value="0">
   <input type="button" name="stinc", value="+" onClick="this.form.stageTwoTime.value++">
   <input type="button" name="stdec", value="-" onClick="this.form.stageTwoTime.value--"><br>
-  Fouls:<br>
-  Regular Fouls:
+  <label>Fouls:<br></label>
+  <label for="fouls">Regular Fouls:</label>
   <input type="text" name="fouls" value="0">
   <input type="button" name="finc", value="+" onClick="this.form.fouls.value++">
   <input type="button" name="fdec", value="-" onClick="this.form.fouls.value--"><br>
-  Tech Fouls:
+  <label for="techFouls">Tech Fouls:</label>
   <input type="text" name="techFouls" value="0">
   <input type="button" name="tfinc", value="+" onClick="this.form.techFouls.value++">
   <input type="button" name="tfdec", value="-" onClick="this.form.techFouls.value--"><br>
-  Cards:<br>
-  None:
+  <label for="cards">Cards:<br>
+  None:</label>
   <input type="radio" name="cards" value="0" checked>
-  Yellow Card:
+  <label for="cards">Yellow Card:</label>
   <input type="radio" name="cards" value="1">
-  Red Card:
+  <label for="cards">Red Card:</label>
   <input type="radio" name="cards" value="2"><br>
-  Endgame:<br>
-  Status:
-  Climbed: <input type="radio" name="climbed" value="2">
-  On Platform: <input type="radio" name="climbed" value="1" checked>
-  N/A: <input type="radio" name="climbed" value="0" checked><br>
-  Balanced?
+  <label>Endgame:<br>
+  Status:</label>
+  <label for="climbed">Climbed: </label>
+  <input type="radio" name="climbed" value="2">
+  <label for="climbed">On Platform: </label>
+  <input type="radio" name="climbed" value="1" checked>
+  <label for="climbed">N/A: </label>
+  <input type="radio" name="climbed" value="0" checked><br>
+  <label for="balanceBool">Balanced?</label>
   yes: <input type="radio" name="balanceBool" value="yes">
   no: <input type="radio" name="balanceBool" value="no" checked><br>
-  Time:
+  <label for="climbTime">Time:</label>
   <input type="text" name="climbTime" value="4415">
   <input type="button" name="ctinc", value="+" onClick="this.form.climbTime.value++">
   <input type="button" name="ctdec", value="-" onClick="this.form.climbTime.value--"><br>
-  Comments:<br>
+  <label for="comments">Comments:<br></label>
   <input type="text" name="comments"><br>
-  <input type="button" name="button" value="Submit" onClick="submitMatchData(this.form)">
+  <input type="button" name="submitButton" value="Submit" onClick="submitMatchData(this.form)"><br>
 </form>
-<button onclick="checkConnection();">Check connection!</button>
-<button onclick="makeQrCode('Hello World');">QR Code</button>
-{{/*end*/}}
-
-{{/*if .PitScout*/}}
-
-{{/*end*/}}
-
 <canvas id="qr"></canvas>
+{{end}}
+
+{{if .PitScout}}
+<p>Enter pit data now!</p>
+<form>
+<label for="team">Team:</label>
+<input type="text" name="team"><br>
+<label for="teamname">Team Name:</label>
+<input type="text" name="teamname"><br>
+<label for="cycletime">Cycle Time:</label>
+<input type="text" name="cycletime"><br>
+<label for="comments">Comments:</label>
+<input type="text" name="comments"><br>
+<label for="picture">Picture:</label>
+<input type="file" name="picture"><br>
+<input type="button" name="submitButton" value="Submit" onClick="submitPitData(this.form)"><br>
+</form>
+<canvas id="qr"></canvas>
+{{end}}
+
+{{if .nope}}
+<p>This is not the page you're looking for</p><br>
+<a href="/scout?type=match">Match Scouting</a>
+<a href="/scout?type=pit">Pit Scouting</a>
+{{end}}
 
 <script src="js/qrious.js"></script>
 <script src="js/papaparse.js"></script>

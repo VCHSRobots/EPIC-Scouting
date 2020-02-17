@@ -13,6 +13,7 @@
  - [X] Gin router
  - [ ] Task scheduler daemon
  - [X] GZIP served page data to save bandwidth
+ - [ ] Ensure that all functions which can encounter an error return a proper error object (unless they have a fatal error, in which case they should user log.Fatal())
 
 ### Frontend
 
@@ -21,7 +22,7 @@
  - [ ] Team admin overview page
  - [ ] Campaign / event / match selection screen for teams
  - [ ] Simple list-based data entry scouting page
- - [ ] User profiles
+ - [ ] User profiles (read)
  - [ ] User dashboard
  - [ ] Team-joining
 
@@ -35,6 +36,9 @@
 ### Frontend
 
  - [ ] CSS and beautification pass
+ - [ ] User profiles (write)
+   - [ ] Add contact options other than email (preferably as a struct of any size)
+   - [ ] Add profile pictures
  - [ ] Map-based data entry
  - [ ] Finalize adaptive design to target mobile devices
  - [ ] "About this software" page, include link to git repository and documentation
@@ -73,6 +77,7 @@
  - [ ] Allow for creating custom campaigns and match conditions via YAML and SVGs
  - [ ] Allow for custom result weighting algorithms
  - [ ] Switch to a database system that allows for nested tables
+ - [ ] Require password to be entered twice when creating or updating an account.
  - [ ] Allow reloading of configuration without rebooting by sysadmins
 
 ### Low Priority

@@ -110,10 +110,6 @@ func TeamClimbingBreakdown(competitorid, campaignid string) []int {
 	return breakdown
 }
 
-//TeamDefenceToleranceBreakdown gets how many times a robot has been defended successfully and unseccesfully, and how many points are lost due to defense
-
-//TeamDefenceBreakdown gets how many times and how many points a team takes away from their opponent in defending
-
 //TeamColorWheelBreakdown gets how quickly a team can do stage 1 and 2 of the color wheel, along with whether they can do it at all
 func TeamColorWheelBreakdown(competitorid, campaignid string) []int {
 	breakdown := make([]int, 7)
@@ -146,10 +142,6 @@ func TeamFoulBreakdown(competitorid, campaignid string) []int {
 }
 
 //Team Overall Scoring and Ranking functions give teams conglomerate scores such as OPR, DPR, and overall ranking
-
-//TeamOPR gives a team an overall offensive rating
-
-//TeamDPR gives a team an overall defensive rating
 
 //TeamOverallEvent gives a team an overall quality score
 

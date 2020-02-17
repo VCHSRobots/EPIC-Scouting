@@ -1,6 +1,6 @@
 package scouting
 
-//QuerySchedule gets called upon GET request from route/scout. It checks the SCHEDULE database for the next match to be scouted. If it is empty, populate the match's entry with teamids of the participants and records of which scouters each team
+import "math"
 
 //Scheduler gets data for teams being scouted in the next match
 
@@ -11,8 +11,37 @@ package scouting
 //GetScouterMatch gets which match a specific scouter is on
 
 //AssignNewUser assigns a user who is ready to scout to the next match
+func AssignNewUser(userid string) string {
+	priorities := getPriorityMap("match")
+	totalPriority := 0
+	scoutersWanted := make(map[string]int, 0)
+	toScout := ""
+	for _, priority := range priorities {
+		totalPriority += priority
+	}
+	for team, priority := range priorities {
+		scoutersWanted[team] = int(math.Round(float64(priority) / float64(totalPriority)))
+	}
+	topPriority := 0
+	currentScouters := 0
+	for team, scouters := range scoutersWanted {
+		currentScouters = 0 //TODO get how many scouters each team has
+		if (scouters - currentScouters) > topPriority {
+			topPriority = scouters
+			toScout = team
+		}
+	}
+	//Add userid to scout team in toScout
+	return toScout
+}
 
-//ShouldAdvanceTeamMatch
+//TODO getPrioriyMap gets a map of the teams in the next match along with their correlating priorities
+func getPriorityMap(matchid string) map[string]int {
+	pmap := make(map[string]int, 6)
+	return pmap
+}
+
+//UpdateMatch updates the match to be scouted
 
 //NextMatch gets data on which match is next to be scouted
 

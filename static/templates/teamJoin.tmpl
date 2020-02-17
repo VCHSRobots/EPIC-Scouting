@@ -1,8 +1,8 @@
 {{template "header" .HeaderData}}
 <h1>Join a team!</h1>
 <p>Search by team name, team number, or <i class="info" title="A UUID used internally to reference teams.">id<i></p>
-<form action="/joinTeamPOST" method="post">
+<form action="/teamJoinPOST" method="post">
 <input type="text" name="team"></p><br>
 <input type="submit" value="Login">
-<p><i>Alternatively, you may create a new team <a href="/createTeam">here</a>.</i></p>
+<p><i>Alternatively, you may create a new team <a href="/teamCreate">here</a>.</i></p>
 {{template "footer"}}
