@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/scrypt"
 
 	// Comment to make golint happy.
 	_ "github.com/mattn/go-sqlite3"
@@ -82,7 +83,9 @@ encryptPassword encrypts the given plaintext password with the given salt, and t
 func encryptPassword(password string) (string, error) {
 	// TODO: Use something more secure than bcrypt. The crypto/bcrypt package uses a DEPRECATED version of blowfish. See https://golang.org/pkg/crypto/aes/.
 	// TODO: Enforce password length limits if required by hashing algorithm.
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	//Using N=32768, r=8, and p=1 as per scrypt recomendations for interactive logins
+	// TODO: Don't use a blank salt
+	hash, err := scrypt.Key([]byte(password), []byte(""), 32768, 8, 1, 32)
 	if err != nil {
 		log.Error("Password hash failed.")
 		return "", errors.New("unable to hash password")
