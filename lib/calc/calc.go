@@ -37,15 +37,62 @@ type results struct {
 Team scoring devices never affect each other and are measured against an ideal target. They are then used for computing a team's overall rank
 Relative category scores calculate a robot's score compared to the best preformer in that category*/
 
+//TODO: make an external reference to the weight of each element on the composite scores
+
 //TeamAuto gets a team's autonomous rating
+func TeamAuto(competitorid, campaignid string) int {
+	breakdown := TeamAutoBreakdown(competitorid, campaignid)
+	weights := []int{5, 4, 2, 1, 1, 1, 1}
+	score := 0
+	for ind, weight := range weights {
+		score += breakdown[ind] * weight
+	}
+	return score
+}
 
 //TeamShooting gets a team's overall shooting score
+func TeamShooting(competitorid, campaignid string) int {
+	breakdown := TeamShootingBreakdown(competitorid, campaignid)
+	weights := []int{1, 2, 3, 5, 3, 2, 1}
+	score := 0
+	for ind, weight := range weights {
+		score += breakdown[ind] * weight
+	}
+	return score
+}
 
 //TeamClimbing gets a team's score for climbing
+func TeamClimbing(competitorid, campaignid string) int {
+	breakdown := TeamClimbingBreakdown(competitorid, campaignid)
+	weights := []int{2, 1, 1}
+	score := 0
+	for ind, weight := range weights {
+		score += breakdown[ind] * weight
+	}
+	return score
+}
 
 //TeamColorWheel gets how good a team is at manipulating the color wheel
+func TeamColorWheel(competitorid, campaignid string) int {
+	breakdown := TeamColorWheelBreakdown(competitorid, campaignid)
+	weights := []int{1, 1}
+	score := 0
+	for ind, weight := range weights {
+		score += breakdown[ind] * weight
+	}
+	return score
+}
 
-//TeamPenalty gets how many penalties a team accrues. Extra weight to yellow cards and tech fouls
+//TeamFoul gets how many penalties a team accrues. Extra weight to yellow cards and tech fouls
+func TeamFoul(competitorid, campaignid string) int {
+	breakdown := TeamFoulBreakdown(competitorid, campaignid)
+	weights := []int{1, 3, 2, 2}
+	score := 0
+	for ind, weight := range weights {
+		score += breakdown[ind] * weight
+	}
+	return score
+}
 
 //RelativeAuto gets a team's autonomous rating relative to the highest scoring contestant
 
@@ -119,7 +166,7 @@ func TeamClimbingBreakdown(competitorid, campaignid string) []int {
 
 //TeamColorWheelBreakdown gets how quickly a team can do stage 1 and 2 of the color wheel, along with whether they can do it at all
 func TeamColorWheelBreakdown(competitorid, campaignid string) []int {
-	breakdown := make([]int, 7)
+	breakdown := make([]int, 2)
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
 	matches := getTeamResults(campaignid, competitorid)
@@ -133,7 +180,7 @@ func TeamColorWheelBreakdown(competitorid, campaignid string) []int {
 
 //TeamFoulBreakdown gets how many times a team has recieved regular fouls, tech fouls, and yellow cards, along with the total amount of points lost by them to fouls
 func TeamFoulBreakdown(competitorid, campaignid string) []int {
-	breakdown := make([]int, 7)
+	breakdown := make([]int, 4)
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
 	matches := getTeamResults(campaignid, competitorid)

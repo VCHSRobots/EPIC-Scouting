@@ -1,9 +1,9 @@
 package routes
 
 import (
+	"EPIC-Scouting/lib/auth"
 	"EPIC-Scouting/lib/web"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,11 +12,14 @@ import (
 Dashboard shows the dashboard.
 */
 func Dashboard(c *gin.Context) {
-	cookiestring, _ := c.Cookie("login")
-	if cookiestring != "" {
-		cstrs := strings.Fields(cookiestring)
+	userMode := auth.GetUserMode(c)
+	uuid, username := auth.DecodeLoginCookie(c)
+	if userMode == "sysadmin" {
 		HeaderData := &web.HeaderData{Title: "Dashboard", StyleSheets: []string{"global"}}
-		c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"HeaderData": HeaderData, "uuid": cstrs[0], "Username": cstrs[1]})
+		c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"HeaderData": HeaderData, "uuid": uuid, "Username": username, "SysAdmin": true})
+	} else if userMode == "user" {
+		HeaderData := &web.HeaderData{Title: "Dashboard", StyleSheets: []string{"global"}}
+		c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"HeaderData": HeaderData, "uuid": uuid, "Username": username})
 	} else {
 		Forbidden(c)
 	}

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"EPIC-Scouting/lib/auth"
 	"EPIC-Scouting/lib/db"
 	"EPIC-Scouting/lib/web"
 	"fmt"
@@ -12,6 +13,11 @@ import (
 SysAdmin shows the SysAdmin page.
 */
 func SysAdmin(c *gin.Context) {
+	print(auth.GetUserMode(c))
+	if auth.GetUserMode(c) != "sysadmin" {
+		Forbidden(c)
+		return
+	}
 	HeaderData := &web.HeaderData{Title: "Super Secret Sysadmin Bunker", StyleSheets: []string{"global"}}
 	sizes := db.GetDatabaseSize()
 	var DatabaseSizes []string

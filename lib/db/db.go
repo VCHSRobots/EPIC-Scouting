@@ -252,6 +252,16 @@ func UserQuery(userID string) (*UserData, error) {
 	return &d, nil
 }
 
+//GetUserID gets a user id from a username
+func GetUserID(username string) string {
+	var foundID string
+	err := dbUsers.QueryRow(fmt.Sprintf("SELECT userid FROM users WHERE username='%s'", username)).Scan(&foundID)
+	if err == sql.ErrNoRows {
+		return ""
+	}
+	return foundID
+}
+
 /*
 TEAM ADMIN FUNCTIONS
 */

@@ -2,6 +2,9 @@
 <h1>dashboard</h1>
 <p>Welcome, {{.Username}}!</p>
 <p><a href="/profile">View your profile</a></p>
+{{if .SysAdmin}}
+<p><a href="/sysadmin"><i>Super Secret Sysadmin Bunker</i></a>
+{{end}}
 <p><a href="/logout">Logout</a></p>
 <p>Your teams:</p>
 <select>

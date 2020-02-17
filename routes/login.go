@@ -28,9 +28,8 @@ func LoginPOST(c *gin.Context) {
 	password := c.PostForm("password")
 	//The login function returns the uuid but returns a blank string if it fails
 	loggedIn, _ := db.UserLogin(username, password)
-	uuid := "helloworld"
-	if uuid != "" && loggedIn {
-		//should cookie store if user has sysadmin?
+	if loggedIn {
+		uuid := db.GetUserID(username)
 		cookie := fmt.Sprintf("%s %s", uuid, username)
 		//secure cannot be set to true until we get http working
 		//TODO: put in actual site domain
