@@ -207,7 +207,7 @@ func UserLogin(username, password string) (loggedIn bool, err error) {
 	var storedHash string
 	err = dbUsers.QueryRow(fmt.Sprintf("SELECT username, password FROM users WHERE username='%s'", username)).Scan(&username, &storedHash)
 	if err != nil {
-		log.Debugf("Failed to log in user %q: %s", username, err.Error())
+		log.Warnf("Failed to log in user %q: %s", username, err.Error())
 		loggedIn = false
 		return
 	}

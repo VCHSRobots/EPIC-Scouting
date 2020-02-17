@@ -40,3 +40,9 @@ func LoginPOST(c *gin.Context) {
 		c.HTML(200, "login.tmpl", gin.H{"loggedIn": false, "HeaderData": HeaderData})
 	}
 }
+
+//Logout logs a user out by voiding the login cookie
+func Logout(c *gin.Context) {
+	c.SetCookie("login", "", 1, "/", "", http.SameSiteLaxMode, false, false)
+	c.Redirect(http.StatusSeeOther, "/login")
+}

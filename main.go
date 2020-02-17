@@ -78,6 +78,7 @@ func start(port int) {
 	router.GET("/help", routes.Help)
 	router.GET("/login", routes.Login)
 	router.POST("/loginPOST", routes.LoginPOST)
+	router.GET("/logout", routes.Logout)
 	router.GET("/profile", routes.Profile)
 	router.POST("/profilePOST", routes.ProfilePOST)
 	router.GET("/register", routes.Register)

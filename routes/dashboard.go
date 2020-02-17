@@ -16,9 +16,8 @@ func Dashboard(c *gin.Context) {
 	if cookiestring != "" {
 		cstrs := strings.Fields(cookiestring)
 		HeaderData := &web.HeaderData{Title: "Dashboard", StyleSheets: []string{"global"}}
-		c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"HeaderData": HeaderData, "uuid": cstrs[0], "username": cstrs[1]})
+		c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"HeaderData": HeaderData, "uuid": cstrs[0], "Username": cstrs[1]})
 	} else {
 		Forbidden(c)
 	}
-
 }

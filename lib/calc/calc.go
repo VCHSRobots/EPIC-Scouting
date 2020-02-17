@@ -34,7 +34,8 @@ type results struct {
 //RawTeamEventData gets a team's raw statistics for an event - best for putting on spreadsheets for raw comparison/printout
 
 /*All calculation functions below can be set to include or exclude certain data based on time to allow display of development of scores over time
-//Team scoring devices never affect each other and are measured against an ideal target. They are then used for computing a team's overall rank*/
+Team scoring devices never affect each other and are measured against an ideal target. They are then used for computing a team's overall rank
+Relative category scores calculate a robot's score compared to the best preformer in that category*/
 
 //TeamAuto gets a team's autonomous rating
 
@@ -42,13 +43,19 @@ type results struct {
 
 //TeamClimbing gets a team's score for climbing
 
-//TeamDefenceTolerance gets a measurement of how little a team has been affected by defense
-
-//TeamDefence gets how good a team is a defending opponents
-
 //TeamColorWheel gets how good a team is at manipulating the color wheel
 
-//TeamPenalty gets how many penalties a team accrues. Extra weight to yellow cards and tech fouls.
+//TeamPenalty gets how many penalties a team accrues. Extra weight to yellow cards and tech fouls
+
+//RelativeAuto gets a team's autonomous rating relative to the highest scoring contestant
+
+//RelativeShooting gets a team's overall shooting score relative to the highest scoring contestant
+
+//RelativeClimbing gets a team's score for climbing relative to the highest scoring contestant
+
+//RelativeColorWheel gets how good a team is at manipulating the color wheel relative to the highest scoring contestant
+
+//RelativePenalty gets how many penalties a team accrues relative to the lowest scoring contestant
 
 /*Team scoring breakdowns return the numbers that go into calculating the factors above. They don't affect the team's overall score directly. They should be used to get a better idea of why a score is a certain value and what a robot is actually good at.
 They are also what the above functions use to get their data*/
