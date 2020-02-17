@@ -52,5 +52,5 @@ func InternalServerError(c *gin.Context, err interface{}) {
 	HeaderData := &web.HeaderData{Title: "500: Internal server error", StyleSheets: []string{"error"}}
 	data := &internalServerErrorData{HeaderData: HeaderData, Error: err}
 	c.HTML(http.StatusInternalServerError, "500.tmpl", data)
-	log.Warnf("Internal server error: %q", err)
+	log.Errorf("Internal server error: %q", err)
 }

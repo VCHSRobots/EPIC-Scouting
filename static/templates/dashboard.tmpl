@@ -1,6 +1,7 @@
 {{template "header" .HeaderData}}
 <h1>dashboard</h1>
-<p>Welcome, {{.username}}!</p>
+<p>Welcome, {{.Username}}!</p>
+<p><a href="/profile">View your profile</a></p>
 <p>Your teams:</p>
 <select>
 {{/* Use range to populate field. If empty, redirect from /dashboard to /join */}}

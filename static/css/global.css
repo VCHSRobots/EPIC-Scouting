@@ -24,6 +24,11 @@ p {
     font-family: monospace;
 }
 
+.warning {
+    color: #ff0000;
+    font-weight: bold;
+}
+
 .info:hover {
     cursor: help;
     text-decoration: underline;

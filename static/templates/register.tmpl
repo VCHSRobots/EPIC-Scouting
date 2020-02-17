@@ -10,4 +10,5 @@
 <p><i>Fields marked with an * are mandatory.</i></p>
 <input type="submit" value="Register">
 </form>
+{{if .Error}}<p class="warning">{{.Error}}</p>{{end}}
 {{template "footer"}}
