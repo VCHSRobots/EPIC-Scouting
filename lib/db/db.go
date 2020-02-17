@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/scrypt"
 
 	// Comment to make golint happy.
@@ -90,7 +89,8 @@ func encryptPassword(password string) (string, error) {
 		log.Error("Password hash failed.")
 		return "", errors.New("unable to hash password")
 	}
-	return string(hash), nil
+	shash := fmt.Sprintf("%x", hash)
+	return shash, nil
 }
 
 /*
@@ -214,10 +214,8 @@ func UserLogin(username, password string) (loggedIn bool, err error) {
 		loggedIn = false
 		return
 	}
-	storedHashByte := []byte(storedHash)
-	inputByte := []byte(password)
-	errCompare := bcrypt.CompareHashAndPassword(storedHashByte, inputByte)
-	if errCompare != nil {
+	passHash, _ := encryptPassword(password)
+	if passHash != storedHash {
 		log.Debugf("Failed to log in user %q: %s", username, "password mismatch.")
 		loggedIn = false
 		return
