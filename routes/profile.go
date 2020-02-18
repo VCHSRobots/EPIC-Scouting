@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"EPIC-Scouting/lib/auth"
 	"EPIC-Scouting/lib/db"
 	"net/http"
 
@@ -11,8 +12,22 @@ import (
 Profile shows the profile page.
 */
 func Profile(c *gin.Context) {
-	d, _ := db.UserQuery("00000000-0000-0000-0000-000000000000") // TODO: Use the proper UserID
-	c.HTML(http.StatusOK, "profile.tmpl", gin.H{"UserName": &d.UserName, "Email": &d.Email, "FirstName": &d.FirstName, "LastName": &d.LastName, "UserID": &d.UserID})
+	uuid, _ := auth.LoginCookie(c)
+	d, _ := db.UserQuery(uuid) // TODO: Use the proper UserID
+	NullString := "{ false}"
+	Email := ""
+	FirstName := ""
+	LastName := ""
+	if d.Email != NullString {
+		Email = d.Email
+	}
+	if d.FirstName != NullString {
+		FirstName = d.FirstName
+	}
+	if d.LastName != NullString {
+		LastName = d.LastName
+	}
+	c.HTML(http.StatusOK, "profile.tmpl", gin.H{"Username": d.UserName, "Email": Email, "FirstName": FirstName, "LastName": LastName, "UserID": d.UserID})
 }
 
 /*

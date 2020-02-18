@@ -13,7 +13,7 @@ Dashboard shows the dashboard.
 */
 func Dashboard(c *gin.Context) {
 	userMode := auth.GetUserMode(c)
-	uuid, username := auth.DecodeLoginCookie(c)
+	uuid, username := auth.LoginCookie(c)
 	if userMode == "sysadmin" {
 		HeaderData := &web.HeaderData{Title: "Dashboard", StyleSheets: []string{"global"}}
 		c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"HeaderData": HeaderData, "uuid": uuid, "Username": username, "SysAdmin": true})

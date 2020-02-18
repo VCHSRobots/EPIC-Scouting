@@ -18,7 +18,7 @@ func GetUserMode(c *gin.Context) string {
 	// This function is used when rendering menu options on the index.
 	// 1. Check if user is logged in. If yes, return "user". Otherwise "guest"
 	// Basically looks at their cookies / auth token.
-	uuid, _ := DecodeLoginCookie(c)
+	uuid, _ := LoginCookie(c)
 	userData, _ := db.UserQuery(uuid)
 	if userData == nil {
 		return "guest"
@@ -28,8 +28,8 @@ func GetUserMode(c *gin.Context) string {
 	return "user"
 }
 
-//DecodeLoginCookie parses the login cookie into the username and uuid
-func DecodeLoginCookie(c *gin.Context) (string, string) {
+//LoginCookie parses the login cookie into the username and uuid
+func LoginCookie(c *gin.Context) (string, string) {
 	cstring, _ := c.Cookie("login")
 	if cstring == "" {
 		return "", ""

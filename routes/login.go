@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"EPIC-Scouting/lib/auth"
 	"EPIC-Scouting/lib/db"
 	"EPIC-Scouting/lib/web"
 	"fmt"
@@ -13,9 +14,13 @@ import (
 Login shows the login page.
 */
 func Login(c *gin.Context) {
-	HeaderData := &web.HeaderData{Title: "Login", StyleSheets: []string{"global"}}
-	loggedIn := true
-	c.HTML(http.StatusOK, "login.tmpl", gin.H{"loggedIn": loggedIn, "HeaderData": HeaderData})
+	if auth.GetUserMode(c) == "guest" {
+		HeaderData := &web.HeaderData{Title: "Login", StyleSheets: []string{"global"}}
+		loggedIn := true
+		c.HTML(http.StatusOK, "login.tmpl", gin.H{"loggedIn": loggedIn, "HeaderData": HeaderData})
+	} else {
+		c.Redirect(http.StatusSeeOther, "/dashboard")
+	}
 }
 
 /*

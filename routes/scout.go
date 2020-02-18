@@ -1,8 +1,8 @@
 package routes
 
 import (
+	"EPIC-Scouting/lib/auth"
 	"EPIC-Scouting/lib/web"
-	"strings"
 
 	"net/http"
 
@@ -37,9 +37,8 @@ func MatchPOST(c *gin.Context) {
 	c.ShouldBindJSON(&data)
 	//postData := data.Data[0]
 	//gets uuid to associate with data
-	usercookie, _ := c.Cookie("login")
-	if usercookie != "" {
-		uuid := strings.Fields(usercookie)[0]
+	uuid, _ := auth.LoginCookie(c)
+	if uuid != "" {
 		println(uuid)
 	} else {
 		Forbidden(c)

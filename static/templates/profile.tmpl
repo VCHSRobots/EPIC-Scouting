@@ -3,11 +3,11 @@
 <p>Update profile...</p>
 <p>THIS FEATURE IS CURRENTLY NOT AVAILABLE</p>
 <form action="/profilePOST" method="post">
-<p>Username: {{.Username}}<input type="text" name="username" disabled>*</p><br>
+<p>Username: <input type="text" name="username" value="{{.Username}}" disabled>*</p><br>
 <p>Password: <input type="password" name="password" disabled>*</p>
-<p>Email: {{.Email}}<input type="text" name="email" disabled></p><br>
-<p>First Name: {{.FirstName}}<input type="text" name="firstname" disabled></p><br>
-<p>Last Name: {{.LastName}}<input type="text" name="lastname" disabled></p><br>
+<p>Email: <input type="text" name="email" value="{{.Email}}" disabled></p><br>
+<p>First Name: <input type="text" name="firstname" value="{{.FirstName}}" disabled></p><br>
+<p>Last Name: <input type="text" name="lastname" value="{{.LastName}}" disabled></p><br>
 <p><i>Fields marked with an * are mandatory.</i></p>
 <input type="submit" value="Update" disabled>
 </form>
