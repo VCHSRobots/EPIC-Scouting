@@ -11,8 +11,15 @@ import (
 
 //Data route for data display
 func Data(c *gin.Context) {
+	querydisplay := c.Query("display")
 	HeaderData := &web.HeaderData{Title: "Data", StyleSheets: []string{"global"}}
-	c.HTML(http.StatusOK, "data.tmpl", gin.H{"HeaderData": HeaderData})
+	if querydisplay == "match" {
+		c.HTML(http.StatusOK, "data.tmpl", gin.H{"HeaderData": HeaderData, "MatchData": true})
+	} else if querydisplay == "team" {
+		c.HTML(http.StatusOK, "data.tmpl", gin.H{"HeaderData": HeaderData, "TeamData": true})
+	} else {
+		c.HTML(http.StatusOK, "data.tmpl", gin.H{"HeaderData": HeaderData, "none": true})
+	}
 }
 
 //GetGraph gets a test graph

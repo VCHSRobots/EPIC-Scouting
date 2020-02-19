@@ -5,8 +5,31 @@
 <a href="/data?display=team">Team Data </a> 
 {{end}}
 {{if .MatchData}}
+<h1>Match Data</h1>
+<select onchange="changeSortMethod()">
+<option value="Overall">Overall</option>
+<option value="Auto">Auto</option>
+<option value="Shooting">Shooting</option>
+<option value="ColorWheel">Color Wheel</option>
+<option value="Fouls">Fouls</option>
+</select>
+<table>
+    <tr>
+        <th>Overall</th>
+        <th>Autonomous</th>
+        <th>Shooting</th>
+        <th>Color Wheel</th>
+        <th>Climbing</th>
+        <th>Fouls</th>
+</table>
 {{end}}
 {{if .TeamData}}
+<h1>Team Data<h1>
 <img id="robot"></img>
+<p id="overall"></p>
+<p id="auto"></p>
+<p id="shooting"></p>
+<p id="climbing"></p>
+<p id="fouls"></p>
 {{end}}
 {{template "footer"}}
