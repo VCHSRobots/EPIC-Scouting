@@ -1,0 +1,12 @@
+{{template "header" .HeaderData}} 
+{{if .none}}
+<h1>Data</h1>
+<a href="/data?display=match">Match Data </a>
+<a href="/data?display=team">Team Data </a> 
+{{end}}
+{{if .MatchData}}
+{{end}}
+{{if .TeamData}}
+<img id="robot"></img>
+{{end}}
+{{template "footer"}}

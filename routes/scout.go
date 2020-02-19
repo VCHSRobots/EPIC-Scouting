@@ -20,13 +20,13 @@ Scout shows the scout page.
 func Scout(c *gin.Context) {
 	querytype := c.Query("type")
 	if querytype == "match" {
-		HeaderData := &web.HeaderData{Title: "Match Scouting", StyleSheets: []string{"global"}}
+		HeaderData := &web.HeaderData{Title: "Match Scouting", StyleSheets: []string{"scout"}}
 		c.HTML(http.StatusOK, "scout.tmpl", gin.H{"HeaderData": HeaderData, "MatchScout": true})
 	} else if querytype == "pit" {
-		HeaderData := &web.HeaderData{Title: "Pit Scouting", StyleSheets: []string{"global"}}
+		HeaderData := &web.HeaderData{Title: "Pit Scouting", StyleSheets: []string{"scout"}}
 		c.HTML(http.StatusOK, "scout.tmpl", gin.H{"HeaderData": HeaderData, "PitScout": true})
 	} else {
-		HeaderData := &web.HeaderData{Title: "Scouting?", StyleSheets: []string{"global"}}
+		HeaderData := &web.HeaderData{Title: "Scouting?", StyleSheets: []string{"scout"}}
 		c.HTML(http.StatusOK, "scout.tmpl", gin.H{"HeaderData": HeaderData, "nope": true})
 	}
 }
