@@ -1,6 +1,53 @@
 {{template "header" .HeaderData}}
-<p>Scouting Data</p>
-<button onClick="showGraph('graph', '/getGraph')">Show Graph</button>
-<img id="graph"></img>
-<script src="js/graphs.js"></script>
+<script src="js/papaparse.js"></script>
+<script src="js/data.js"></script>
+{{if .none}}
+<h1>Data</h1>
+<a href="/data?display=match">Match Data </a>
+<a href="/data?display=teamprofile">Match Data </a>
+<a href="/data?display=team">Team Data </a> 
+{{end}}
+{{if .MatchData}}
+<h1>Match Data</h1>
+<table>
+    <tr>
+        <th>Match #</th>
+        <th>Teams</th>
+        <th>Red Score</th>
+        <th>Blue Score</th>
+        <th>Winner</th>
+    </tr>
+</table>
+{{end}}
+{{if .TeamOverall}}
+<h1>Team Data</h1>
+<select onchange="changeSortMethod()">
+<option value="Overall">Overall</option>
+<option value="Auto">Auto</option>
+<option value="Shooting">Shooting</option>
+<option value="ColorWheel">Color Wheel</option>
+<option value="Fouls">Fouls</option>
+</select>
+<table id="teamdata">
+    <tr>
+        <th>Overall</th>
+        <th>Autonomous</th>
+        <th>Shooting</th>
+        <th>Color Wheel</th>
+        <th>Climbing</th>
+        <th>Fouls</th>
+    </tr>
+</table>
+<script src="js/loaddata.js"></script>
+{{end}}
+{{if .TeamProfile}}
+<h1>Team Profile<h1>
+<img id="robot"></img>
+<p id="overall"></p>
+<p id="auto"></p>
+<p id="shooting"></p>
+<p id="colorwheel"></p>
+<p id="climbing"></p>
+<p id="fouls"></p>
+{{end}}
 {{template "footer"}}
