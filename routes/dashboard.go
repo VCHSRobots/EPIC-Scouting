@@ -2,9 +2,11 @@ package routes
 
 import (
 	"EPIC-Scouting/lib/auth"
+	"EPIC-Scouting/lib/db"
 	"EPIC-Scouting/lib/web"
 	"net/http"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,8 +14,10 @@ import (
 Dashboard shows the dashboard.
 */
 func Dashboard(c *gin.Context) {
+	session := sessions.Default(c)
 	userMode := auth.GetUserMode(c)
 	uuid, username := auth.LoginCookie(c)
+	teams := db.UserQueryTeams(userID)
 	if userMode == "sysadmin" {
 		HeaderData := &web.HeaderData{Title: "Dashboard", StyleSheets: []string{"global"}}
 		c.HTML(http.StatusOK, "dashboard.tmpl", gin.H{"HeaderData": HeaderData, "uuid": uuid, "Username": username, "SysAdmin": true})
