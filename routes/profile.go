@@ -13,6 +13,11 @@ Profile shows the profile page.
 */
 func Profile(c *gin.Context) {
 	uuid, _ := auth.LoginCookie(c)
+	//checks if login uuid was valid
+	if uuid == "" {
+		Forbidden(c)
+		return
+	}
 	d, _ := db.UserQuery(uuid) // TODO: Use the proper UserID
 	NullString := "{ false}"
 	Email := ""
