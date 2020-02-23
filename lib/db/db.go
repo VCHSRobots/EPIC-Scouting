@@ -133,6 +133,7 @@ func TouchBase(databasePath string) {
 	dbTeams = newDatabase("teams")
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL, schedule TEXT NOT NULL )")                                                                                     // A team.
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS members ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL, usertype TEXT NOT NULL )")                                                                                                            // The members on a team. UserType is either member or admin.
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS joinrequests ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL )")                                                                                                                               // Users who have requested to join a team, but have not yet been accepted.
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                                                                                                              // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL, stats )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
 
@@ -273,21 +274,13 @@ func UserModify(userID string, data interface{}) {
 
 /*
 UserQuery returns the user's information as a UserData struct. Returns an error if the user could not be found.
-If bool userName is true searches with userName instead of userID.
 UserData.password is the hashed password.
 */
-func UserQuery(userID string, userName bool) (*UserData, error) {
-	var d UserData // TODO: Tidy this function up.
-	if userName {
-		errQueryRowUsers := dbUsers.QueryRow(fmt.Sprintf("SELECT * FROM users WHERE username='%s'", userID)).Scan(&d.UserID, &d.UserName, &d.Password, &d.FirstName, &d.LastName, &d.Email, &d.LastSeen) // Load user data.
-		if errQueryRowUsers != nil {
-			return nil, errQueryRowUsers
-		}
-	} else {
-		errQueryRowUsers := dbUsers.QueryRow(fmt.Sprintf("SELECT * FROM users WHERE userid='%s'", userID)).Scan(&d.UserID, &d.UserName, &d.Password, &d.FirstName, &d.LastName, &d.Email, &d.LastSeen) // Load user data.
-		if errQueryRowUsers != nil {
-			return nil, errQueryRowUsers
-		}
+func UserQuery(userID string) (*UserData, error) {
+	var d UserData
+	errQueryRowUsers := dbUsers.QueryRow(fmt.Sprintf("SELECT * FROM users WHERE userid='%s'", userID)).Scan(&d.UserID, &d.UserName, &d.Password, &d.FirstName, &d.LastName, &d.Email, &d.LastSeen) // Load user data.
+	if errQueryRowUsers != nil {
+		return nil, errQueryRowUsers
 	}
 	var foundID string
 	errQueryRowSysAdmins := dbUsers.QueryRow(fmt.Sprintf("SELECT userid FROM sysadmins WHERE userid='%s'", userID)).Scan(&foundID) // Check if user is in the SysAdmin list.
