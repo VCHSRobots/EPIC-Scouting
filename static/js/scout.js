@@ -6,7 +6,7 @@ var connected;
 
 function submitMatchData(form) {
   //Parse data to CSV
-  //TODO: Add something to do with user id to the data string
+  //TODO: Add session id verification?
   var data = [form.match.value, form.team.value, form.autoLineCross.value, form.autoLowBalls.value, form.autoHighBalls.value, form.autoBackBalls.value, form.autoPickups.value, form.shotQuantity.value, form.lowFuel.value, form.highFuel.value, form.backFuel.value, form.stageOneComplete.value, form.stageOneTime.value, form.stageTwoComplete.value, form.stageTwoTime.value, form.fouls.value, form.techFouls.value, form.cards.value, form.comments.value];
   var csvstring = data.join();
   //Try to post the data to the server

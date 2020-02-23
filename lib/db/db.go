@@ -5,6 +5,9 @@ import (
 	"EPIC-Scouting/lib/lumberjack"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
 	"database/sql"
 	"os"
@@ -62,6 +65,32 @@ type UserDataContact struct {
 	other string
 }
 */
+
+/*
+MatchData stores match data for transit to and from database
+*/
+type MatchData struct {
+	matchid          string
+	matchnum         int
+	team             int
+	autoLineCross    bool
+	autoLowBalls     int
+	autoHighBalls    int
+	autoBackBalls    int
+	autoPickups      int
+	shotQuantity     int
+	lowFuel          int
+	highFuel         int
+	backFuel         int
+	stageOneComplete bool
+	stageOneTime     int
+	stageTwoComplete bool
+	stageTwoTime     int
+	fouls            int
+	techFouls        int
+	card             string
+	comments         string
+}
 
 /*
 GENERAL FUNCTIONS
@@ -137,18 +166,21 @@ func TouchBase(databasePath string) {
 
 	// Scouting teams.
 	dbTeams = newDatabase("teams")
-	dbTeams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL, schedule TEXT NOT NULL )")                                                                                     // A team.
-	dbTeams.Exec("CREATE TABLE IF NOT EXISTS members ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL, usertype TEXT NOT NULL )")                                                                                                            // The members on a team. UserType is either member or admin.
-	dbTeams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                                                                                                              // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
-	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL, stats )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL, schedule TEXT NOT NULL )")                                                                              // A team.
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS members ( membershipid TEXT PRIMARY KEY, userid TEXT, teamid TEXT NOT NULL, usertype TEXT NOT NULL )")                                                                                           // The members on a team. UserType is either member or admin.
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS requestMembers ( membershipid TEXT PRIMARY KEY, userid TEXT, teamid TEXT NOT NULL )")                                                                                                            // Membership requests for teams
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                                                                                                       // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
 
 	// Campaigns.
 	dbCampaigns = newDatabase("campaigns")
-	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS campaigns ( campaignid TEXT PRIMARY KEY UNIQUE NOT NULL, owner TEXT NOT NULL, name TEXT NOT NULL )")                                      // TODO: Add more information about each campaign. Campaign owner is a teamid. If campaign owner is all zeros, campaign is global.
-	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS events ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, name TEXT NOT NULL, location TEXT, starttime TEXT, endtime TEXT )") // TODO: Add more information about each event.
-	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS matches ( eventid TEXT PRIMARY KEY NOT NULL, matchid TEXT UNIQUE NOT NULL, matchnumber INTEGER NOT NULL, starttime TEXT, endtime TEXT )") // TODO: Add more information about each match.
-	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS participants ( matchid TEXT PRIMARY KEY NOT NULL, competitorid TEXT UNIQUE NOT NULL) ")                                                   // The participants in each match.
-	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS competitors ( competitorid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL )")                                   // TODO: Add more information about each competing team.
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS campaigns ( campaignid TEXT PRIMARY KEY UNIQUE NOT NULL, owner TEXT NOT NULL, name TEXT NOT NULL )")                                            // TODO: Add more information about each campaign. Campaign owner is a teamid. If campaign owner is all zeros, campaign is global.
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS events ( eventid TEXT PRIMARY KEY NOT NULL, campaignid TEXT NOT NULL, name TEXT NOT NULL, location TEXT, starttime INTEGER, endtime INTEGER )") // TODO: Add more information about each event.
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS matches ( eventid TEXT PRIMARY KEY NOT NULL, matchid TEXT UNIQUE NOT NULL, matchnumber INTEGER NOT NULL, active BIT )")                         // TODO: Add more information about each match.
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS matchscout ( scoutid TEXT PRIMARY KEY, matchid TEXT NOT NULL, matchnumber INTEGER NOT NULL, userid TEXT NOT NULL, team INTEGER, autoLineCross BIT, autoLowBalls INTEGER, autoHighBalls INTEGER, autoBackBalls INTEGER, autoPickups INTEGER, shotQuantity INTEGER, lowFuel INTEGER, highFuel INTEGER, backFuel INTEGER, stageOneComplete BIT, stageOneTime INTEGER, stageTwoComplete BIT, stageTwoTime INTEGER, fouls INTEGER, techFouls INTEGER, card TEXT, comments TEXT )")
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS pitscout ( eventid TEXT PRIMARY KEY NOT NULL, matchid TEXT UNIQUE NOT NULL, matchnumber INTEGER NOT NULL, starttime TEXT, endtime TEXT )")
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS participants ( matchid TEXT PRIMARY KEY NOT NULL, competitorid TEXT UNIQUE NOT NULL) ")                 // The participants in each match.
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS competitors ( competitorid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL )") // TODO: Add more information about each competing team.
 }
 
 // TODO: Teams need a way to weight each of their competitors when assigning teams via the scheduler.
@@ -263,114 +295,228 @@ func GetUserID(username string) string {
 }
 
 /*
+GetTeamCampaign gets the uuid of the campaign with which a team is associated
+*/
+func GetTeamCampaign(teamID string) (string, error) {
+	var campaign string
+	//TODO account for schedule as object instead of storing active campaign in it directly
+	err := dbTeams.QueryRow(fmt.Sprintf("SELECT schedule FROM teams WHERE teamid='%s'", teamID)).Scan(&campaign)
+	if err != nil {
+		return "", err
+	}
+	return campaign, nil
+}
+
+/*
+GetTeamEvent gets the event in which a team is currently participating
+*/
+func GetTeamEvent(teamID string) (string, error) {
+	campaignid, err := GetTeamCampaign(teamID)
+	if err != nil {
+		return "", err
+	}
+	event, err := getActiveCampaignEvent(campaignid)
+	if err != nil {
+		return "", err
+	}
+	return event, nil
+}
+
+/*
+DATA STORAGE FUNCTIONS
+*/
+
+/*
+StoreMatch takes the array of data from the form and stores it in the database
+*/
+func StoreMatch(arr []string, agentid, teamid string) error {
+	eventid, err := GetTeamEvent(teamid)
+	if err != nil {
+		return err
+	}
+	data, err := arrToMatchStruct(arr, eventid, agentid)
+	//don't log these errors here since the function calls should log them on their own
+	if err != nil {
+		return err
+	}
+	scoutid := uuid.New().String()
+	result, errExec := dbCampaigns.Exec(fmt.Sprintf("INSERT INTO matchscout VALUES ( '%s', '%s', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%s' )", scoutid, data.matchid, data.matchnum, agentid, data.team, data.autoLineCross, data.autoLowBalls, data.autoHighBalls, data.autoBackBalls, data.autoPickups, data.shotQuantity, data.lowFuel, data.highFuel, data.backFuel, data.stageOneComplete, data.stageOneTime, data.stageTwoComplete, data.stageTwoTime, data.fouls, data.techFouls, data.card, escapeText(data.comments)))
+	if errExec != nil {
+		log.Errorf("Unable to write match scouting data to database: %s", errExec)
+		return errExec
+	}
+	log.Debugf("Match Write Result: %v", result)
+	return nil
+}
+
+/*
+arrToMatchStruct turns the data array into a match struct
+*/
+func arrToMatchStruct(arr []string, eventid, agentid string) (*MatchData, error) {
+	var autoLineCross, stageOneComplete, stageTwoComplete bool
+	var card string
+	//cuts off the last value since comments can't be converted into integers
+	intarr, err := convertArrToInts(arr[:len(arr)-1])
+	if err != nil {
+		return nil, err
+	}
+	matchid, err := matchIDFromNum(intarr[0], eventid)
+	//TODO don't create a new match if you can't find one; this is just for testing
+	if err != nil {
+		CreateMatch(eventid, agentid, intarr[0], true)
+	}
+	autoLineCross = intarr[2] == 1
+	stageOneComplete = intarr[11] == 1
+	stageTwoComplete = intarr[13] == 1
+	if intarr[17] == 1 {
+		card = "yellow"
+	} else if intarr[17] == 2 {
+		card = "red"
+	} else {
+		card = "none"
+	}
+	return &MatchData{matchid: matchid, matchnum: intarr[0], team: intarr[1], autoLineCross: autoLineCross, autoLowBalls: intarr[3], autoHighBalls: intarr[4], autoBackBalls: intarr[5], autoPickups: intarr[6], shotQuantity: intarr[7], lowFuel: intarr[8], highFuel: intarr[9], backFuel: intarr[10], stageOneComplete: stageOneComplete, stageOneTime: intarr[12], stageTwoComplete: stageTwoComplete, stageTwoTime: intarr[14], fouls: intarr[15], techFouls: intarr[16], card: card, comments: arr[18]}, nil
+}
+
+func convertArrToInts(arr []string) ([]int, error) {
+	var intval int
+	var err error
+	ints := make([]int, len(arr))
+	for ind, str := range arr {
+		intval, err = strconv.Atoi(str)
+		ints[ind] = intval
+		if err != nil {
+			log.Errorf("Unable to convert match data array to integers: %s", err)
+			return ints, err
+		}
+	}
+	return ints, nil
+}
+
+func escapeText(str string) string {
+	return strings.ReplaceAll(str, "'", "{singlequote}")
+}
+
+func unescapeText(str string) string {
+	return strings.ReplaceAll(str, "{singlequote}", "'")
+}
+
+/*
+ReadMatch turns database outputs from a given match to match struct
+*/
+func ReadMatch(num int, eventid, scouterid string) (*MatchData, error) {
+	matchid, err := matchIDFromNum(num, eventid)
+	if err != nil {
+		return nil, err
+	}
+	var d MatchData
+	err = dbCampaigns.QueryRow("SELECT team, autoLineCross, autoLowBalls, autoHighBalls, autoBackBalls, autoPickups, shotQuantity, lowFuel, highFuel, backFuel, stageOneComplete, stageOneTime, stageTwoComplete, stageTwoTime, fouls, techFouls, card, comments WHERE matchid='%s' AND userid='%s'", matchid, scouterid).Scan(&d.team, &d.autoLineCross, &d.autoLowBalls, &d.autoHighBalls, &d.autoBackBalls, &d.autoPickups, &d.shotQuantity, &d.lowFuel, &d.highFuel, &d.backFuel, &d.stageOneComplete, &d.stageTwoComplete, &d.stageTwoTime, &d.fouls, &d.techFouls, &d.card, &d.comments)
+	d.matchid = matchid
+	d.matchnum = num
+	d.comments = unescapeText(d.comments)
+	return &d, nil
+}
+
+func matchIDFromNum(num int, eventid string) (string, error) {
+	var matchid string
+	err := dbCampaigns.QueryRow("SELECT matchid FROM matches WHERE eventid='%s' AND matchnum='%s'", eventid, num).Scan(&matchid)
+	if err != nil {
+		log.Warnf("Failed to retrive match id for match #%v from event %s", num, eventid)
+		return "", err
+	}
+	return matchid, nil
+}
+
+/*
+GetMatchScoutData gets scouter's data based on a match id
+*/
+func GetMatchScoutData(matchid string) (*[]MatchData, error) {
+	data := make([]MatchData, 0)
+	rows, _ := dbCampaigns.Query(fmt.Sprintf("SELECT * FROM scoutdata WHERE matchid='%s'", matchid))
+	for rows.Next() {
+		var d MatchData
+		err := rows.Scan(nil, &d.matchid, &d.matchnum, nil, &d.team, &d.autoLineCross, &d.autoLowBalls, &d.autoHighBalls, &d.autoBackBalls, &d.autoPickups, &d.shotQuantity, &d.lowFuel, &d.highFuel, &d.stageOneComplete, &d.stageOneTime, &d.stageTwoComplete, &d.stageTwoTime, &d.fouls, &d.techFouls, &d.card, &d.comments)
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, d)
+	}
+	return &data, nil
+}
+
+/*
+GetTeamScoutData gets scouter's data based on a team id
+*/
+func GetTeamScoutData(teamid string) (*[]MatchData, error) {
+	data := make([]MatchData, 0)
+	rows, _ := dbCampaigns.Query(fmt.Sprintf("SELECT * FROM scoutdata WHERE teamid='%s'", teamid))
+	for rows.Next() {
+		var d MatchData
+		err := rows.Scan(nil, &d.matchid, &d.matchnum, nil, &d.team, &d.autoLineCross, &d.autoLowBalls, &d.autoHighBalls, &d.autoBackBalls, &d.autoPickups, &d.shotQuantity, &d.lowFuel, &d.highFuel, &d.stageOneComplete, &d.stageOneTime, &d.stageTwoComplete, &d.stageTwoTime, &d.fouls, &d.techFouls, &d.card, &d.comments)
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, d)
+	}
+	return &data, nil
+}
+
+/*
 TEAM ADMIN FUNCTIONS
 */
 
 /*
-CreateCampaign TODO.
-*/
-/*
-func CreateCampaign(DatabasePath, agentid, owner, name string) {
-	// TODO: Clone global campaigns to team-specific campaign if requested.
-	// Only sysadmin can create global campaigns.
-	campaigns, err := sql.Open("sqlite3", DatabasePath+"campaigns.db")
-	if err != nil {
-		log.Fatal("Unable to open or create database: " + err.Error())
-		return
-	}
-	//Check if user is authorized to create campaigns
-	usersDb, err := sql.Open("sqlite3", DatabasePath+"users.db")
-	if err != nil {
-		log.Fatal("Unable to open or create database: " + err.Error())
-		return
-	}
-	usertype := checkUserType(agentid, usersDb)
-	if (owner == "globalowner" && usertype != "sysadmin") || (usertype == "invalid") {
-		log.Info("Unauthorized attempt to create global database. User ID: " + agentid)
-		return
-	}
-	id := uuid.New()
-	_, err = campaigns.Exec(fmt.Sprintf("INSERT INTO campaigns (campaignid, owner, name) VALUES ('%s', '%s', '%s');", id, owner, name))
-	// Throw if doing something illegal, such as overwriting existing
-	if err != nil {
-		log.Fatal("Unable to open or create database: " + err.Error())
-	}
-	log.Debugf("Created campaign '%s'", id)
-}
+CAMPAIGN FUCTIONS
 */
 
 /*
-CreateEvent adds an event to the event table in the campaigns database
+getActiveCampaignEvent gets the eventid of the active event in the given campaign
 */
-/*
-func CreateEvent(DatabasePath, agentid, campaignid, name, location, starttime, endtime string) {
-	//TODO: Adds event to campaign table
-	campaigns, err := sql.Open("sqlite3", DatabasePath+"campaigns.db")
-	if err != nil {
-		log.Fatal("Unable to open or create database: " + err.Error())
-		return
+func getActiveCampaignEvent(campaignid string) (string, error) {
+	var eventid string
+	var starttime, endtime int64
+	rows, err := dbCampaigns.Query(fmt.Sprintf("SELECT eventid, starttime, endtime FROM events WHERE campaignid='%s'", campaignid))
+	//checks if event is currently taking place
+	for rows.Next() {
+		err = rows.Scan(&eventid, &starttime, &endtime)
+		if err != nil {
+			return "", err
+		}
+		if starttime < time.Now().Unix() && endtime > time.Now().Unix() {
+			break
+		}
 	}
-	//Check to see if agent has write access to the campaign. If not, deny access
-	usersDb, err := sql.Open("sqlite3", DatabasePath+"users.db")
-	if err != nil {
-		log.Fatal("Unable to open or create database: " + err.Error())
-		return
-	}
-	usertype := checkUserType(agentid, usersDb)
-	userteam := checkUserTeam(agentid, usersDb)
-	campaignowner := getCampaignOwner(campaignid, campaigns)
-	//TODO: get real globalowner name here
-	if (campaignowner != "globalowner" && campaignowner != userteam) || (usertype == "invalid") {
-		log.Info(fmt.Sprintf("Unauthorized attempt to add event to campaign ID %s. User ID: %s", campaignid, agentid))
-		return
-	}
-	id := uuid.New()
-	_, err = campaigns.Exec(fmt.Sprintf("INSERT INTO events (eventid, campaignid, name, location, starttime, endtime) VALUES ('%s', '%s', '%s', '%s', '%s', '%s');", id, campaignid, name, location, starttime, endtime))
-	// Throw if doing something illegal, such as overwriting existing
-	if err != nil {
-		log.Fatal("Unable to open or create database: " + err.Error())
-	}
-	log.Debugf("Created event: '%s'", id.String())
+	return eventid, nil
 }
+
+/*
+CreateCampaign TODO.
 */
+func CreateCampaign(agentid, owner, name string) {
+	// TODO: Clone global campaigns to team-specific campaign if requested.
+	// Only sysadmin can create global campaigns.
+	uuid := uuid.New().String()
+	dbCampaigns.Exec(fmt.Sprintf("INSERT INTO campaigns VALUES ( '%s', '%s', '%s' )", uuid, owner, name))
+}
+
+/*
+CreateEvent adds an event to the event table in the campaigns database
+Its starttime and endtime should be Unix time integers of its start and end dates
+*/
+func CreateEvent(campaignid, agentid, name, location string, starttime, endtime int) error {
+	eventid := uuid.New().String()
+	dbCampaigns.Exec(fmt.Sprintf("INSERT INTO events VALUES ( '%s', '%s', '%s', '%s', '%v', '%v')", eventid, campaignid, name, location, starttime, endtime))
+	return nil
+}
 
 /*
 CreateMatch adds a mach to the match table in the campaign database
 */
-/*
-func CreateMatch(DatabasePath, agentid, eventid, matchnumber, starttime, endtime string) {
-	//TODO: Adds a match to a campaign
-	//TODO: Adds event to campaign table
-	campaigns, err := sql.Open("sqlite3", DatabasePath+"campaigns.db")
-	if err != nil {
-		log.Fatal("Unable to open or create database: " + err.Error())
-		return
-	}
-	//Check to see the team who owns the match's campaign tied to the event the match is connected to. If the campaign is not write accessable to the agent, deny access
-	usersDb, err := sql.Open("sqlite3", DatabasePath+"users.db")
-	if err != nil {
-		log.Fatal("Unable to open or create database: " + err.Error())
-		return
-	}
-	usertype := checkUserType(agentid, usersDb)
-	userteam := checkUserTeam(agentid, usersDb)
-	campaignid := getEventCampaign(eventid, campaigns)
-	campaignowner := getCampaignOwner(campaignid, campaigns)
-	//TODO: get real globalowner name here
-	if (campaignowner != "globalowner" && campaignowner != userteam) || (usertype == "invalid") {
-		log.Info(fmt.Sprintf("Unauthorized attempt to create match in event ID %s in campaign %s. User ID: %s", eventid, campaignid, agentid))
-		return
-	}
-	id := uuid.New()
-	_, err = campaigns.Exec(fmt.Sprintf("INSERT INTO matches (matchid, eventid, matchnumber, starttime, endtime) VALUES ('%s', '%s', '%s', '%s', '%s');", id, eventid, matchnumber, starttime, endtime))
-	// Throw if doing something illegal, such as overwriting existing
-	if err != nil {
-		schedule
-		log.Fatal("Unable to open or create database: " + err.Error())
-	}
-	log.Debugf("Created match: '%s'", id.String())
+func CreateMatch(eventid, agentid string, num int, active bool) error {
+	matchid := uuid.New().String()
+	dbCampaigns.Exec(fmt.Sprintf("INSERT INTO matches VALUES ( '%s', '%s', '%v', '%v' )", eventid, matchid, num, active))
+	return nil
 }
-*/
 
 /*
 TEAM MATCH DATA READ-WRITE FUNCTIONS
