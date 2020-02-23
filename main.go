@@ -13,6 +13,8 @@ import (
 
 	nice "github.com/ekyoung/gin-nice-recovery"
 	"github.com/gin-contrib/gzip"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 
 	"github.com/gin-gonic/gin"
 )
@@ -61,9 +63,11 @@ func start(port int) {
 	// TODO END
 
 	router = gin.New()
-	router.Use(gin.Logger())                    // TODO: Add authentication middle which refreshes session tokens.
+	router.Use(gin.Logger())
 	router.Use(gzip.Gzip(gzip.BestCompression)) // Gzip compression.
-	router.Static("/css", "./static/css")       // TODO: Make URL access to /css/, /js/, /media/, and /templates/ use the proper NoRoute() handler and NOT http.404, as it currently just returns a blank page.
+	store := cookie.NewStore([]byte("secret"))
+	router.Use(sessions.Sessions("session", store))
+	router.Static("/css", "./static/css") // TODO: Make URL access to /css/, /js/, /media/, and /templates/ use the proper NoRoute() handler and NOT http.404, as it currently just returns a blank page.
 	router.Static("/js", "./static/js")
 	router.Static("/media", "./static/media")
 	router.Static("/templates", "./static/templates")

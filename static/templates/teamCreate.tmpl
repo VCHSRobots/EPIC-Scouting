@@ -1,3 +1,7 @@
 {{template "header" .HeaderData}}
 <h1>Create a new team:</h1>
+<form action="/teamCreatePOST" method="post">
+<p>Team number: <input type="text" name="number"></input></p>
+<p>Team name: <input type="text" name="name"></input></p>
+<submit>
 {{template "footer"}}

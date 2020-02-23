@@ -7,6 +7,7 @@ import (
 	"EPIC-Scouting/lib/db"
 	"strings"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 

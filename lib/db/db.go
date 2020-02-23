@@ -13,7 +13,7 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/scrypt"
+	"github.com/raja/argon2pw"
 
 	// Comment to make golint happy.
 	_ "github.com/mattn/go-sqlite3"
@@ -39,6 +39,16 @@ Schedule describes the current Campaign / Event / Match a team is contributing t
 */
 type Schedule struct {
 	matchID string
+}
+
+/*
+TeamData describes the elements which make up a team.
+*/
+type TeamData struct {
+	TeamID      string
+	TeamName    string
+	TeamMembers map[string]string
+	Schedule    string
 }
 
 /*
@@ -109,17 +119,12 @@ func accessCheck(err error) {
 encryptPassword encrypts the given plaintext password with the given salt, and then escapes characters that might cause SQL some issue. Returns a string. Returns error if this fails for some reason.
 */
 func encryptPassword(password string) (string, error) {
-	// TODO: Use something more secure than bcrypt. The crypto/bcrypt package uses a DEPRECATED version of blowfish. See https://golang.org/pkg/crypto/aes/.
-	// TODO: Enforce password length limits if required by hashing algorithm.
-	//Using N=32768, r=8, and p=1 as per scrypt recomendations for interactive logins
-	// TODO: Don't use a blank salt
-	hash, err := scrypt.Key([]byte(password), []byte(""), 32768, 8, 1, 32)
+	hashedPassword, err := argon2pw.GenerateSaltedHash(password)
 	if err != nil {
 		log.Error("Password hash failed.")
 		return "", errors.New("unable to hash password")
 	}
-	shash := fmt.Sprintf("%x", hash)
-	return shash, nil
+	return hashedPassword, nil
 }
 
 /*
@@ -153,8 +158,7 @@ func TouchBase(databasePath string) {
 	dbUsers.Exec("CREATE TABLE IF NOT EXISTS sysadmins ( userid TEXT PRIMARY KEY UNIQUE NOT NULL )")                                                                                                              // List of users which are SysAdmins.
 
 	// Create a default SysAdmin user if it does not exist.
-	// TODO: handle the error UserCreate returns here.
-	_, errQuery := UserQuery("00000000-0000-0000-0000-000000000000")
+	_, errQuery := UserQuery("00000000-0000-0000-0000-000000000000") // TODO: handle the error UserCreate returns here.
 	if errQuery != nil {
 		result, _ := UserCreate(&UserData{UserID: "00000000-0000-0000-0000-000000000000", UserName: "SysAdmin", Password: "root", FirstName: "", LastName: "", Email: "", SysAdmin: true, LastSeen: ""})
 		if result {
@@ -171,6 +175,15 @@ func TouchBase(databasePath string) {
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS requestMembers ( membershipid TEXT PRIMARY KEY, userid TEXT, teamid TEXT NOT NULL )")                                                                                                            // Membership requests for teams
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                                                                                                       // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
+	/*
+		dbTeams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL, schedule TEXT NOT NULL )")                                                                                     // A team.
+		dbTeams.Exec("CREATE TABLE IF NOT EXISTS members ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL, usertype TEXT NOT NULL )")                                                                                                            // The members on a team. UserType is either member or admin.
+		dbTeams.Exec("CREATE TABLE IF NOT EXISTS joinrequests ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL )")                                                                                                                               // Users who have requested to join a team, but have not yet been accepted.
+		dbTeams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                                                                                                              // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
+		dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL, stats )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
+	*/
+
+	// Create a default SysAdmin team if it does not exist.
 
 	// Campaigns.
 	dbCampaigns = newDatabase("campaigns")
@@ -183,14 +196,56 @@ func TouchBase(databasePath string) {
 	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS competitors ( competitorid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL )") // TODO: Add more information about each competing team.
 }
 
+/*
+TEAM ADMIN FUNCTIONS
+*/
+
 // TODO: Teams need a way to weight each of their competitors when assigning teams via the scheduler.
+
+/*
+TeamCreate creates a new team from a TeamData struct. Returns bool false and an error if unable to create team.
+*/
+func TeamCreate() {
+
+}
+
+/*
+TeamDelete deletes a team from the database. Returns false and an error if unable to delete.
+Note that information recorded by the into a shared campaign is not deleted, but their account and private campaigns are deactivated (password is set to null.)
+*/
+func TeamDelete(teamID string) {
+	// TODO.
+}
+
+/*
+TeamList returns the teamID for every team in the system.
+*/
+func TeamList() (teams []string) {
+	rows, err := dbTeams.Query("SELECT teamid FROM teams")
+	accessCheck(err)
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		err := rows.Scan(&id)
+		teams = append(teams, id)
+		accessCheck(err)
+	}
+	return teams
+}
+
+/*
+TeamQuery returns a team's information as a TeamData struct.
+*/
+func TeamQuery() {
+
+}
 
 /*
 USER FUNCTIONS
 */
 
 /*
-UserCreate creates a new user from a UserData struct. Returns bool false if unable to create user.
+UserCreate creates a new user from a UserData struct. Returns bool false and an error if unable to create user.
 UserData.password is hashed.
 If UserData.userID is null, a new and random ID is assigned.
 UserData.lastSeen is set to the current time.
@@ -213,6 +268,7 @@ func UserCreate(d *UserData) (bool, error) {
 	}
 	hash, _ := encryptPassword(d.Password) // TODO: Handle error
 	d.Password = hash
+	d.LastSeen = time.Now().Format("2006-01-02 15:04:05")
 	result, errExec := dbUsers.Exec(fmt.Sprintf("INSERT INTO users VALUES ( '%s', '%s', '%s', '%v', '%v', '%v', '%s' )", d.UserID, d.UserName, d.Password, NullifyString(d.FirstName), NullifyString(d.LastName), NullifyString(d.Email), d.LastSeen))
 	if errExec != nil {
 		if errExec != sql.ErrNoRows {
@@ -228,7 +284,7 @@ func UserCreate(d *UserData) (bool, error) {
 }
 
 /*
-UserDelete deletes a user's login information. Returns false if unable to delete user.
+UserDelete deletes a user's login information. Returns false and an error if unable to delete user.
 Note that information recorded by the user into a team's results is not deleted, but their account is deactivated (password is set to null.)
 */
 func UserDelete(userID string) {
@@ -242,12 +298,12 @@ func UserLogin(username, password string) (loggedIn bool, err error) {
 	var storedHash string
 	err = dbUsers.QueryRow(fmt.Sprintf("SELECT username, password FROM users WHERE username='%s'", username)).Scan(&username, &storedHash)
 	if err != nil {
-		log.Warnf("Failed to log in user %q: %s", username, err.Error())
+		log.Debugf("Failed to log in user %q: %s", username, err.Error())
 		loggedIn = false
 		return
 	}
-	passHash, _ := encryptPassword(password)
-	if passHash != storedHash {
+	valid, err := argon2pw.CompareHashWithPassword(storedHash, password)
+	if !valid {
 		log.Debugf("Failed to log in user %q: %s", username, "password mismatch.")
 		loggedIn = false
 		return
@@ -282,16 +338,6 @@ func UserQuery(userID string) (*UserData, error) {
 		d.SysAdmin = true
 	}
 	return &d, nil
-}
-
-//GetUserID gets a user id from a username
-func GetUserID(username string) string {
-	var foundID string
-	err := dbUsers.QueryRow(fmt.Sprintf("SELECT userid FROM users WHERE username='%s'", username)).Scan(&foundID)
-	if err == sql.ErrNoRows {
-		return ""
-	}
-	return foundID
 }
 
 /*
@@ -572,7 +618,7 @@ func SysAdminPromote(userID string) bool {
 		log.Errorf("Unable to promote user %s: %s", userID, err.Error())
 	}
 	if d.SysAdmin { // User is already a SysAdmin.
-		log.Warnf("Unable to promote user %s: user is already a SysAdmin.", userID)
+		log.Infof("Unable to promote user %s: user is already a SysAdmin.", userID)
 		return false
 	}
 	_, errAccess := dbUsers.Exec(fmt.Sprintf("INSERT INTO sysadmins VALUES ('%s')", userID))
