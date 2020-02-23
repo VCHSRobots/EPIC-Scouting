@@ -32,6 +32,9 @@ var dbUsers *sql.DB
 var dbTeams *sql.DB
 var dbCampaigns *sql.DB
 
+type MatchData struct {
+}
+
 /*
 Schedule describes the current Campaign / Event / Match a team is contributing to.
 */
@@ -40,13 +43,14 @@ type Schedule struct {
 }
 
 /*
-TeamData describes the elements which make up a team.
+TeamData describes the most of the data regarding a team.
 */
 type TeamData struct {
-	TeamID      string
-	TeamName    string
-	TeamMembers map[string]string
-	Schedule    string
+	TeamID             string
+	TeamName           string
+	TeamMembers        map[string]string // UserID and UserType.
+	AvaliableCampaigns map[string]bool   // List of CampaignIDs a team may write to. Bool indicates if team has write access, FALSE = read only.
+	Schedule           []string          // CampaignID, EventID, and MatchID for the team's current scouting.
 }
 
 /*
@@ -131,10 +135,10 @@ func TouchBase(databasePath string) {
 
 	// Scouting teams.
 	dbTeams = newDatabase("teams")
-	dbTeams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL, schedule TEXT NOT NULL )")                                                                                     // A team.
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS teams ( teamid TEXT PRIMARY KEY UNIQUE NOT NULL, number TEXT UNIQUE, name TEXT NOT NULL )")                                                                                                             // A team.
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS members ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL, usertype TEXT NOT NULL )")                                                                                                            // The members on a team. UserType is either member or admin.
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS joinrequests ( teamid TEXT PRIMARY KEY NOT NULL, userid TEXT NOT NULL )")                                                                                                                               // Users who have requested to join a team, but have not yet been accepted.
-	dbTeams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                                                                                                              // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, campaignid TEXT NOT NULL, eventid TEXT,  )")                                                                                                          // What campaign / event / match a team is currently participating in. A team is scouting all matches during an event, of course.
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL, stats )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
 
 	// Create a default SysAdmin team if it does not exist.
@@ -424,11 +428,15 @@ func getCompetitorNumber(competitorid string, db *sql.DB) string {
 }
 
 /*
-WriteResults TODO
+ResultsWrite writes
 */
-func WriteResults() {
+func ResultsWrite(useriD, teamID string, data MatchData) {
 	// TODO
 	// Throw if overwriting existing
+}
+
+func ResultsRead() {
+
 }
 
 /*
