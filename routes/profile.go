@@ -12,7 +12,7 @@ import (
 Profile shows the profile page.
 */
 func Profile(c *gin.Context) {
-	uuid, _ := auth.LoginCookie(c)
+	uuid := auth.CheckLogin(c)
 	//checks if login uuid was valid
 	if uuid == "" {
 		Forbidden(c)

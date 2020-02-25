@@ -37,13 +37,19 @@ func Scout(c *gin.Context) {
 func MatchPOST(c *gin.Context) {
 	var data MatchData
 	c.ShouldBindJSON(&data)
-	//postData := data.Data[0]
 	//gets uuid to associate with data
-	uuid, _ := auth.LoginCookie(c)
-	team, _ := c.Cookie("team")
-	if uuid != "" {
-		err := db.StoreMatch(data.Data[0], uuid, team)
-		fmt.Println(err)
+	userID := auth.CheckLogin(c)
+	//*uncomment this line to create test match*
+	//db.CreateMatch("epicevent", userID, 1, true)
+	//team, _ := c.Cookie("team")
+	//original team id do not steal
+	testTeamID := "4415epicrobotz"
+	if userID != "" {
+		db.StoreMatch(data.Data[0], userID, testTeamID)
+		data, _ := db.GetTeamScoutData(testTeamID)
+		for _, match := range *data {
+			fmt.Println(match.MatchID, match.MatchNum, match.Team, match.AutoLineCross, match.AutoLowBalls, match.AutoHighBalls, match.AutoBackBalls, match.AutoPickups, match.ShotQuantity, match.LowFuel, match.HighFuel, match.BackFuel, match.StageOneComplete, match.StageOneTime, match.StageTwoComplete, match.StageTwoTime, match.Fouls, match.TechFouls, match.Card, match.ClimbTime, match.Comments)
+		}
 	} else {
 		Forbidden(c)
 	}

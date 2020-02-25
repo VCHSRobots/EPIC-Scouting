@@ -19,10 +19,9 @@ func TeamCreate(c *gin.Context) {
 /*
 TeamCreatePOST TODO
 */
-
 func TeamCreatePOST(c *gin.Context) {
 	c.Request.ParseForm()
-	teamCreator := "USERID-GOES-HERE" // TODO: Get UserID via session cookie.
+	//teamCreator := "USERID-GOES-HERE" // TODO: Get UserID via session cookie.
 	c.PostForm("number")
 	c.PostForm("name")
 	db.TeamCreate()

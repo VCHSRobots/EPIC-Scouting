@@ -6,7 +6,6 @@ import (
 	"EPIC-Scouting/lib/web"
 	"net/http"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,7 +26,6 @@ func Login(c *gin.Context) {
 LoginPOST logs a user in.
 */
 func LoginPOST(c *gin.Context) {
-	session := sessions.Default(c)
 	HeaderData := &web.HeaderData{Title: "Login", StyleSheets: []string{"global"}}
 	c.Request.ParseForm()
 	username := c.PostForm("username")
@@ -35,9 +33,8 @@ func LoginPOST(c *gin.Context) {
 	//The login function returns the uuid but returns a blank string if it fails
 	loggedIn, _ := db.UserLogin(username, password)
 	if loggedIn {
-		d, _ := db.UserQuery(username, true)
-		userID := d.UserID
-		session.Set(userID, username)
+		userData, _ := db.UserQuery(username)
+		auth.SetLogin(c, userData.UserID)
 		c.Redirect(http.StatusSeeOther, "/dashboard") // Although gin's method here is named Redirect, the HTTP response code used is 303. See https://en.wikipedia.org/wiki/HTTP_303 for more information.
 	} else {
 		c.HTML(200, "login.tmpl", gin.H{"loggedIn": false, "HeaderData": HeaderData})
@@ -46,6 +43,6 @@ func LoginPOST(c *gin.Context) {
 
 //Logout logs a user out by voiding the login cookie
 func Logout(c *gin.Context) {
-	c.SetCookie("login", "", 1, "/", "", http.SameSiteLaxMode, false, false)
+	auth.SetLogin(c, "")
 	c.Redirect(http.StatusSeeOther, "/login")
 }

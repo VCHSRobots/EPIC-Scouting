@@ -16,7 +16,6 @@ func TeamJoin(c *gin.Context) {
 /*
 TeamJoinRequest requests to join a team.
 */
-
 func TeamJoinRequest(c *gin.Context) {
-	db.TeamJoinRequest(requesterID, teamID string)
+	//db.TeamJoinRequest(requesterID, teamID string)
 }
