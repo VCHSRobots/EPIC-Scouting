@@ -1,9 +1,11 @@
 package routes
 
 import (
+	"EPIC-Scouting/lib/auth"
 	"EPIC-Scouting/lib/db"
 	"EPIC-Scouting/lib/web"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,8 +23,11 @@ TeamCreatePOST TODO
 */
 func TeamCreatePOST(c *gin.Context) {
 	c.Request.ParseForm()
-	//teamCreator := "USERID-GOES-HERE" // TODO: Get UserID via session cookie.
-	c.PostForm("number")
-	c.PostForm("name")
-	db.TeamCreate()
+	teamCreator := auth.CheckLogin(c)
+	if teamCreator == "" {
+		Forbidden(c)
+	}
+	teamNum, _ := strconv.Atoi(c.PostForm("number"))
+	teamName := c.PostForm("name")
+	db.TeamCreate(teamNum, teamName, "")
 }
