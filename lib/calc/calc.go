@@ -4,6 +4,7 @@ Package calc provides functions for calculating various game statistics.
 package calc
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
@@ -17,6 +18,18 @@ Team scoring devices never affect each other and are measured against an ideal t
 Relative category scores calculate a robot's score compared to the best preformer in that category*/
 
 //TODO: make an external reference to the weight of each element on the composite scores
+
+//TeamOverall gets a teams overall score based off a weight table yet to be implemented
+func TeamOverall(teamNum int, campaignid string) int {
+	auto := TeamAuto(teamNum, campaignid)
+	shooting := TeamShooting(teamNum, campaignid)
+	climbing := TeamClimbing(teamNum, campaignid)
+	colorWheel := TeamColorWheel(teamNum, campaignid)
+	foul := TeamFoul(teamNum, campaignid)
+	overall := auto + shooting + climbing + colorWheel - foul
+	fmt.Println(overall)
+	return overall
+}
 
 //TeamAuto gets a team's autonomous rating
 func TeamAuto(teamNum int, campaignid string) int {
@@ -92,7 +105,7 @@ func TeamAutoBreakdown(teamNum int, campaignID string) []int {
 	breakdown := make([]int, 8)
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
-	matches, _ := db.GetTeamScoutData(teamNum, campaignID)
+	matches, _ := db.GetTeamResults(teamNum, campaignID)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		if match.AutoLineCross {
@@ -103,7 +116,11 @@ func TeamAutoBreakdown(teamNum int, campaignID string) []int {
 		breakdown[3] += match.AutoLowBalls
 		breakdown[4] += match.AutoShots
 		breakdown[5] += match.AutoPickups
-		breakdown[6] += (match.AutoBackBalls + match.AutoHighBalls) / (match.AutoShots - match.AutoLowBalls)
+		if match.AutoShots-match.AutoLowBalls != 0 {
+			breakdown[6] += (match.AutoBackBalls + match.AutoHighBalls) / (match.AutoShots - match.AutoLowBalls)
+		} else {
+			breakdown[6] = 0
+		}
 		//total auto points
 		breakdown[7] += breakdown[0]*15 + match.AutoBackBalls*6 + match.AutoHighBalls*4 + match.AutoLowBalls*2
 	}
@@ -115,14 +132,18 @@ func TeamShootingBreakdown(teamNum int, campaignid string) []int {
 	breakdown := make([]int, 7)
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
-	matches, _ := db.GetTeamScoutData(teamNum, campaignid)
+	matches, _ := db.GetTeamResults(teamNum, campaignid)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		breakdown[0] += match.ShotQuantity
 		breakdown[1] += match.LowFuel
 		breakdown[2] += match.HighFuel
 		breakdown[3] += match.BackFuel
-		breakdown[4] += (match.HighFuel + match.BackFuel) / (match.ShotQuantity - match.LowFuel)
+		if match.ShotQuantity-match.LowFuel != 0 {
+			breakdown[4] += (match.HighFuel + match.BackFuel) / (match.ShotQuantity - match.LowFuel)
+		} else {
+			breakdown[4] = 0
+		}
 		breakdown[5] = match.LowFuel + match.HighFuel + match.BackFuel
 		//total auto points
 		breakdown[6] += match.LowFuel*1 + match.HighFuel*2 + match.BackFuel*3
@@ -135,7 +156,7 @@ func TeamClimbingBreakdown(teamNum int, campaignID string) []int {
 	breakdown := make([]int, 3)
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
-	matches, _ := db.GetTeamScoutData(teamNum, campaignID)
+	matches, _ := db.GetTeamResults(teamNum, campaignID)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		if match.Climbed == "climbed" {
@@ -158,7 +179,7 @@ func TeamColorWheelBreakdown(teamNum int, campaignID string) []int {
 	breakdown := make([]int, 2)
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
-	matches, _ := db.GetTeamScoutData(teamNum, campaignID)
+	matches, _ := db.GetTeamResults(teamNum, campaignID)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		breakdown[0] += match.StageOneTime
@@ -172,7 +193,7 @@ func TeamFoulBreakdown(teamNum int, campaignID string) []int {
 	breakdown := make([]int, 4)
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
-	matches, _ := db.GetTeamScoutData(teamNum, campaignID)
+	matches, _ := db.GetTeamResults(teamNum, campaignID)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		breakdown[0] += match.Fouls
