@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wcharczuk/go-chart"
@@ -24,8 +25,8 @@ func Data(c *gin.Context) {
 	} else if querydisplay == "team" {
 		c.HTML(http.StatusOK, "data.tmpl", gin.H{"HeaderData": HeaderData, "TeamOverall": true})
 	} else if querydisplay == "teamprofile" {
-		testTeamID := "0b28675e-4dbd-413b-96ca-016be82c78d6"
-		campaign, _ := db.GetTeamCampaign(testTeamID)
+		teamID, _ := db.GetTeamID(team)
+		campaign, _ := db.GetTeamCampaign(teamID)
 		overall := calc.TeamOverall(team, campaign)
 		auto := calc.TeamAuto(team, campaign)
 		shooting := calc.TeamAuto(team, campaign)
@@ -38,19 +39,39 @@ func Data(c *gin.Context) {
 	}
 }
 
-//MatchDataGet sends match data in csv form to the ajax frontend
-func MatchDataGet(c *gin.Context) {
-	teamSortKeys := []string{"team", "overall", "auto", "shooting", "climing", "colorwheel", "fouls"}
+//TeamDataGet sends match data in csv form to the ajax frontend
+func TeamDataGet(c *gin.Context) {
+	var swap []int
+	var build strings.Builder
+	teamSortKeys := []string{"Team", "Overall", "Auto", "Shooting", "Climing", "Colorwheel", "Fouls"}
 	sortby := c.Query("sortby")
 	userTeam, _ := strconv.Atoi(auth.CheckTeam(c))
 	userTeamID, _ := db.GetTeamID(userTeam)
 	campaign, _ := db.GetTeamCampaign(userTeamID)
 	if sortby == "" || !contains(teamSortKeys, sortby) {
-		sortby = "match"
+		sortby = "Overall"
 	}
+	searchind := where(teamSortKeys, sortby)
+	fmt.Println(sortby, searchind)
 	//TODO: get each match from database and sort based on the querystring
-	data, _ := db.GetTeamResults(userTeam, campaign)
-	fmt.Println(data)
+	scores := calc.GetTeamScores(campaign)
+	for x := len(scores) - 1; x >= 0; x-- {
+		for y := x - 1; y >= 0; y-- {
+			if scores[y][searchind] < scores[x][searchind] {
+				swap = scores[x]
+				scores[x] = scores[y]
+				scores[y] = swap
+			}
+		}
+	}
+	for ind, score := range scores {
+		build.WriteString(writeCSV(score))
+		if ind != len(score)-1 {
+			build.WriteString("\n")
+		}
+	}
+	csvString := build.String()
+	c.String(http.StatusOK, "text", csvString)
 }
 
 func contains(arr []string, val string) bool {
@@ -60,6 +81,27 @@ func contains(arr []string, val string) bool {
 		}
 	}
 	return false
+}
+
+func where(arr []string, val string) int {
+	for ind, x := range arr {
+		if x == val {
+			return ind
+		}
+	}
+	return -1
+}
+
+func writeCSV(arr []int) string {
+	var str strings.Builder
+	for ind, val := range arr {
+		strval := strconv.Itoa(val)
+		str.WriteString(strval)
+		if ind != len(arr)-1 {
+			str.WriteString(",")
+		}
+	}
+	return str.String()
 }
 
 //GetGraph gets a test graph

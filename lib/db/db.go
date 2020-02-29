@@ -555,6 +555,30 @@ func GetEventResults(event string) (*[]MatchData, error) {
 }
 
 /*
+GetCurrentEventResults gets results from all matches in an event
+*/
+func GetCurrentEventResults(campaignid string) (*[]MatchData, error) {
+	var matchEvent, competitorid string
+	event, _ := getActiveCampaignEvent(campaignid)
+	data := make([]MatchData, 0)
+	rows, err := dbTeams.Query(fmt.Sprintf("SELECT matchid, matchnumber, competitorid, autoLineCross, autoLowBalls, autoHighBalls, autoBackBalls, autoPickups, shotQuantity, lowFuel, highFuel, backFuel, stageOneComplete, stageOneTime, stageTwoComplete, stageTwoTime, fouls, techFouls, card, climbed, balanced, climbtime, comments FROM results WHERE eventid='%s'", event))
+	defer rows.Close()
+	for rows.Next() {
+		var d MatchData
+		err = rows.Scan(&d.MatchID, &d.MatchNum, &competitorid, &d.AutoLineCross, &d.AutoLowBalls, &d.AutoHighBalls, &d.AutoBackBalls, &d.AutoPickups, &d.ShotQuantity, &d.LowFuel, &d.HighFuel, &d.BackFuel, &d.StageOneComplete, &d.StageOneTime, &d.StageTwoComplete, &d.StageTwoTime, &d.Fouls, &d.TechFouls, &d.Card, &d.Climbed, &d.Balanced, &d.ClimbTime, &d.Comments)
+		if err != nil {
+			return nil, err
+		}
+		d.Team, _ = getTeamNumberFromID(competitorid)
+		matchEvent, _ = getMatchEvent(d.MatchID)
+		if matchEvent == event {
+			data = append(data, d)
+		}
+	}
+	return &data, nil
+}
+
+/*
 GetCampaignResults gets results from all matches in a campaign
 */
 func GetCampaignResults(campaignid string) (*[]MatchData, error) {
@@ -576,7 +600,7 @@ func GetCampaignResults(campaignid string) (*[]MatchData, error) {
 
 func getTeamNumberFromID(teamID string) (int, error) {
 	var number int
-	err := dbCampaigns.QueryRow(fmt.Sprintf("SELECT number FROM teams WHERE teamid='%s'", teamID)).Scan(&number)
+	err := dbCampaigns.QueryRow(fmt.Sprintf("SELECT number FROM competitors WHERE competitorid='%s'", teamID)).Scan(&number)
 	return number, err
 }
 
@@ -593,6 +617,25 @@ func getMatchEvent(matchID string) (string, error) {
 	var eventID string
 	err := dbCampaigns.QueryRow(fmt.Sprintf("SELECT eventid FROM matches WHERE matchid='%s'", matchID)).Scan(&eventID)
 	return eventID, err
+}
+
+/*
+ListAllCompetitors returns a list of all competitor ids
+*/
+func ListAllCompetitors() ([]string, error) {
+	var row string
+	var err error
+	competitors := make([]string, 0)
+	rows, _ := dbTeams.Query(fmt.Sprintf("SELECT competitorid FROM competitors"))
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&row)
+		if err != nil {
+			return competitors, err
+		}
+		competitors = append(competitors, row)
+	}
+	return competitors, nil
 }
 
 /*
@@ -671,11 +714,6 @@ func getCampaignOwner(campaignid string, db *sql.DB) string {
 
 func retconCompetitorID(teamnumber, teamid, DatabasePath string) {
 	// TODO
-}
-
-func getCompetitorNumber(competitorid string, db *sql.DB) string {
-	// TODO
-	return ""
 }
 
 /*
