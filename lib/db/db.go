@@ -83,6 +83,7 @@ type MatchData struct {
 	MatchID          string
 	MatchNum         int
 	Team             int
+	Alliance         string
 	AutoLineCross    bool
 	AutoLowBalls     int
 	AutoHighBalls    int
@@ -178,7 +179,7 @@ func TouchBase(databasePath string) {
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS members ( userid TEXT, teamid TEXT NOT NULL, usertype TEXT NOT NULL )")                                             // The members on a team. UserType is either member or admin.
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS requestMembers ( userid TEXT, teamid TEXT NOT NULL )")                                                              // Membership requests for teams
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                          // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
-	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( scoutid TEXT PRIMARY KEY, campaignid TEXT NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, userid TEXT NOT NULL, competitorid TEXT NOT NULL, matchnumber INTEGER NOT NULL, autoLineCross BIT, autoLowBalls INTEGER, autoHighBalls INTEGER, autoBackBalls INTEGER, autoShots, autoPickups INTEGER, shotQuantity INTEGER, lowFuel INTEGER, highFuel INTEGER, backFuel INTEGER, stageOneComplete BIT, stageOneTime INTEGER, stageTwoComplete BIT, stageTwoTime INTEGER, fouls INTEGER, techFouls INTEGER, card TEXT, climbed TEXT, balanced BIT, climbtime INTEGER, comments TEXT )")
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( scoutid TEXT PRIMARY KEY, campaignid TEXT NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, userid TEXT NOT NULL, competitorid TEXT NOT NULL, matchnumber INTEGER NOT NULL, alliance STRING, autoLineCross BIT, autoLowBalls INTEGER, autoHighBalls INTEGER, autoBackBalls INTEGER, autoShots, autoPickups INTEGER, shotQuantity INTEGER, lowFuel INTEGER, highFuel INTEGER, backFuel INTEGER, stageOneComplete BIT, stageOneTime INTEGER, stageTwoComplete BIT, stageTwoTime INTEGER, fouls INTEGER, techFouls INTEGER, card TEXT, climbed TEXT, balanced BIT, climbtime INTEGER, comments TEXT )")
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
 
 	// Create a default SysAdmin team if it does not exist.
@@ -369,7 +370,6 @@ func GetTeamCampaign(teamID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	print(campaign)
 	return campaign, nil
 }
 
@@ -381,7 +381,7 @@ func GetTeamSchedule(teamID string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	eventid, err := getActiveCampaignEvent(campaignid)
+	eventid, err := GetActiveCampaignEvent(campaignid)
 	if err != nil {
 		return "", "", err
 	}
@@ -411,7 +411,7 @@ func StoreMatch(arr []string, agentid, teamid string) error {
 		competitorid = GetCompetitorID(data.Team)
 	}
 	scoutid := uuid.New().String()
-	result, errExec := dbTeams.Exec(fmt.Sprintf("INSERT INTO results VALUES ( '%s', '%s', '%s', '%s', '%s', '%s', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%s' )", scoutid, campaignid, eventid, data.MatchID, agentid, competitorid, data.MatchNum, data.AutoLineCross, data.AutoLowBalls, data.AutoHighBalls, data.AutoBackBalls, data.AutoShots, data.AutoPickups, data.ShotQuantity, data.LowFuel, data.HighFuel, data.BackFuel, data.StageOneComplete, data.StageOneTime, data.StageTwoComplete, data.StageTwoTime, data.Fouls, data.TechFouls, data.Card, data.Climbed, data.Balanced, data.ClimbTime, escapeText(data.Comments)))
+	result, errExec := dbTeams.Exec(fmt.Sprintf("INSERT INTO results VALUES ( '%s', '%s', '%s', '%s', '%s', '%s', '%v', '%s', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%s' )", scoutid, campaignid, eventid, data.MatchID, agentid, competitorid, data.MatchNum, data.Alliance, data.AutoLineCross, data.AutoLowBalls, data.AutoHighBalls, data.AutoBackBalls, data.AutoShots, data.AutoPickups, data.ShotQuantity, data.LowFuel, data.HighFuel, data.BackFuel, data.StageOneComplete, data.StageOneTime, data.StageTwoComplete, data.StageTwoTime, data.Fouls, data.TechFouls, data.Card, data.Climbed, data.Balanced, data.ClimbTime, escapeText(data.Comments)))
 	if errExec != nil {
 		log.Errorf("Unable to write match scouting data to database: %s", errExec)
 		return errExec
@@ -425,7 +425,7 @@ arrToMatchStruct turns the data array into a match struct
 */
 func arrToMatchStruct(arr []string, eventid, agentid string) (*MatchData, error) {
 	var autoLineCross, stageOneComplete, stageTwoComplete bool
-	var card, climbed string
+	var alliance, card, climbed string
 	//cuts off the last value since comments can't be converted into integers
 	intarr, err := convertArrToInts(arr[:len(arr)-1])
 	if err != nil {
@@ -435,25 +435,30 @@ func arrToMatchStruct(arr []string, eventid, agentid string) (*MatchData, error)
 	if matchid == "" {
 		return nil, err
 	}
-	autoLineCross = intarr[2] == 1
-	stageOneComplete = intarr[11] == 1
-	stageTwoComplete = intarr[13] == 1
-	balanced := intarr[19] == 1
-	if intarr[17] == 1 {
+	autoLineCross = intarr[3] == 1
+	stageOneComplete = intarr[12] == 1
+	stageTwoComplete = intarr[14] == 1
+	balanced := intarr[20] == 1
+	if intarr[2] == 1 {
+		alliance = "red"
+	} else {
+		alliance = "blue"
+	}
+	if intarr[18] == 1 {
 		card = "yellow"
-	} else if intarr[17] == 2 {
+	} else if intarr[18] == 2 {
 		card = "red"
 	} else {
 		card = "none"
 	}
-	if intarr[18] == 2 {
+	if intarr[19] == 2 {
 		climbed = "climbed"
-	} else if intarr[18] == 1 {
+	} else if intarr[19] == 1 {
 		climbed = "platform"
 	} else {
 		climbed = "none"
 	}
-	return &MatchData{MatchID: matchid, MatchNum: intarr[0], Team: intarr[1], AutoLineCross: autoLineCross, AutoLowBalls: intarr[3], AutoHighBalls: intarr[4], AutoBackBalls: intarr[5], AutoPickups: intarr[6], ShotQuantity: intarr[7], LowFuel: intarr[8], HighFuel: intarr[9], BackFuel: intarr[10], StageOneComplete: stageOneComplete, StageOneTime: intarr[12], StageTwoComplete: stageTwoComplete, StageTwoTime: intarr[14], Fouls: intarr[15], TechFouls: intarr[16], Card: card, Climbed: climbed, Balanced: balanced, ClimbTime: intarr[20], Comments: arr[21]}, nil
+	return &MatchData{MatchID: matchid, MatchNum: intarr[0], Team: intarr[1], Alliance: alliance, AutoLineCross: autoLineCross, AutoLowBalls: intarr[3], AutoHighBalls: intarr[4], AutoBackBalls: intarr[5], AutoPickups: intarr[6], ShotQuantity: intarr[7], LowFuel: intarr[8], HighFuel: intarr[9], BackFuel: intarr[10], StageOneComplete: stageOneComplete, StageOneTime: intarr[12], StageTwoComplete: stageTwoComplete, StageTwoTime: intarr[14], Fouls: intarr[15], TechFouls: intarr[16], Card: card, Climbed: climbed, Balanced: balanced, ClimbTime: intarr[20], Comments: arr[21]}, nil
 }
 
 func convertArrToInts(arr []string) ([]int, error) {
@@ -511,7 +516,7 @@ GetTeamResults gets scouter's data based on a team id
 */
 func GetTeamResults(teamNum int, campaignID string) (*[]MatchData, error) {
 	var matchEvent string
-	campaignEvent, _ := getActiveCampaignEvent(campaignID)
+	campaignEvent, _ := GetActiveCampaignEvent(campaignID)
 	competitorID := GetCompetitorID(teamNum)
 	data := make([]MatchData, 0)
 	rows, err := dbTeams.Query(fmt.Sprintf("SELECT matchid, matchnumber, autoLineCross, autoLowBalls, autoHighBalls, autoBackBalls, autoPickups, shotQuantity, lowFuel, highFuel, backFuel, stageOneComplete, stageOneTime, stageTwoComplete, stageTwoTime, fouls, techFouls, card, climbed, balanced, climbtime, comments FROM results WHERE competitorid='%s' AND eventid='%s'", competitorID, campaignEvent))
@@ -532,6 +537,27 @@ func GetTeamResults(teamNum int, campaignID string) (*[]MatchData, error) {
 }
 
 /*
+GetTeamMatchResults gets scouter's data based on a team id for a given match
+*/
+func GetTeamMatchResults(teamNum int, matchID string) (*[]MatchData, error) {
+	data := make([]MatchData, 0)
+	competitorID := GetCompetitorID(teamNum)
+	rows, err := dbTeams.Query(fmt.Sprintf("SELECT matchnumber, autoLineCross, autoLowBalls, autoHighBalls, autoBackBalls, autoPickups, shotQuantity, lowFuel, highFuel, backFuel, stageOneComplete, stageOneTime, stageTwoComplete, stageTwoTime, fouls, techFouls, card, climbed, balanced, climbtime, comments FROM results WHERE competitorid='%s' AND matchid='%s'", competitorID, matchID))
+	defer rows.Close()
+	for rows.Next() {
+		var d MatchData
+		err = rows.Scan(&d.MatchNum, &d.AutoLineCross, &d.AutoLowBalls, &d.AutoHighBalls, &d.AutoBackBalls, &d.AutoPickups, &d.ShotQuantity, &d.LowFuel, &d.HighFuel, &d.BackFuel, &d.StageOneComplete, &d.StageOneTime, &d.StageTwoComplete, &d.StageTwoTime, &d.Fouls, &d.TechFouls, &d.Card, &d.Climbed, &d.Balanced, &d.ClimbTime, &d.Comments)
+		if err != nil {
+			return nil, err
+		}
+		d.MatchID = matchID
+		d.Team = teamNum
+		data = append(data, d)
+	}
+	return &data, nil
+}
+
+/*
 GetEventResults gets results from all matches in an event
 */
 func GetEventResults(event string) (*[]MatchData, error) {
@@ -545,7 +571,7 @@ func GetEventResults(event string) (*[]MatchData, error) {
 		if err != nil {
 			return nil, err
 		}
-		d.Team, _ = getTeamNumberFromID(competitorid)
+		d.Team, _ = GetTeamNumberFromID(competitorid)
 		matchEvent, _ = getMatchEvent(d.MatchID)
 		if matchEvent == event {
 			data = append(data, d)
@@ -559,7 +585,7 @@ GetCurrentEventResults gets results from all matches in an event
 */
 func GetCurrentEventResults(campaignid string) (*[]MatchData, error) {
 	var matchEvent, competitorid string
-	event, _ := getActiveCampaignEvent(campaignid)
+	event, _ := GetActiveCampaignEvent(campaignid)
 	data := make([]MatchData, 0)
 	rows, err := dbTeams.Query(fmt.Sprintf("SELECT matchid, matchnumber, competitorid, autoLineCross, autoLowBalls, autoHighBalls, autoBackBalls, autoPickups, shotQuantity, lowFuel, highFuel, backFuel, stageOneComplete, stageOneTime, stageTwoComplete, stageTwoTime, fouls, techFouls, card, climbed, balanced, climbtime, comments FROM results WHERE eventid='%s'", event))
 	defer rows.Close()
@@ -569,7 +595,7 @@ func GetCurrentEventResults(campaignid string) (*[]MatchData, error) {
 		if err != nil {
 			return nil, err
 		}
-		d.Team, _ = getTeamNumberFromID(competitorid)
+		d.Team, _ = GetTeamNumberFromID(competitorid)
 		matchEvent, _ = getMatchEvent(d.MatchID)
 		if matchEvent == event {
 			data = append(data, d)
@@ -592,13 +618,16 @@ func GetCampaignResults(campaignid string) (*[]MatchData, error) {
 		if err != nil {
 			return nil, err
 		}
-		d.Team, _ = getTeamNumberFromID(competitorid)
+		d.Team, _ = GetTeamNumberFromID(competitorid)
 		data = append(data, d)
 	}
 	return &data, nil
 }
 
-func getTeamNumberFromID(teamID string) (int, error) {
+/*
+GetTeamNumberFromID gets a teams number from their competitor id
+*/
+func GetTeamNumberFromID(teamID string) (int, error) {
 	var number int
 	err := dbCampaigns.QueryRow(fmt.Sprintf("SELECT number FROM competitors WHERE competitorid='%s'", teamID)).Scan(&number)
 	return number, err
@@ -609,7 +638,7 @@ GetTeamID gets team uuid
 */
 func GetTeamID(number int) (string, error) {
 	var teamID string
-	err := dbCampaigns.QueryRow(fmt.Sprintf("SELECT teamid FROM teams WHERE number='%v'", number)).Scan(&teamID)
+	err := dbTeams.QueryRow(fmt.Sprintf("SELECT teamid FROM teams WHERE number='%v'", number)).Scan(&teamID)
 	return teamID, err
 }
 
@@ -617,6 +646,44 @@ func getMatchEvent(matchID string) (string, error) {
 	var eventID string
 	err := dbCampaigns.QueryRow(fmt.Sprintf("SELECT eventid FROM matches WHERE matchid='%s'", matchID)).Scan(&eventID)
 	return eventID, err
+}
+
+/*
+GetMatchParticipants gets teams participating on each alliance in a match
+*/
+func GetMatchParticipants(matchID string) [][]int {
+	participants := make([][]int, 2)
+	participants[0] = GetAllianceParticipants(matchID, "red")
+	participants[1] = GetAllianceParticipants(matchID, "blue")
+	return participants
+}
+
+/*
+GetAllianceParticipants gets teams participating in a particular alliance in a match
+*/
+func GetAllianceParticipants(matchID, alliance string) []int {
+	var teamID string
+	var teamNum int
+	allies := make([]int, 0)
+	rows, _ := dbTeams.Query(fmt.Sprintf("SELECT teamid FROM results WHERE matchid='%s' AND alliance='%s'", matchID, alliance))
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&teamID)
+		teamNum, _ = GetTeamNumberFromID(teamID)
+		if !contains(allies, teamNum) {
+			allies = append(allies, teamNum)
+		}
+	}
+	return allies
+}
+
+func contains(arr []int, val int) bool {
+	for _, x := range arr {
+		if x == val {
+			return true
+		}
+	}
+	return false
 }
 
 /*
@@ -647,9 +714,9 @@ CAMPAIGN FUCTIONS
 */
 
 /*
-getActiveCampaignEvent gets the eventid of the active event in the given campaign
+GetActiveCampaignEvent gets the eventid of the active event in the given campaign
 */
-func getActiveCampaignEvent(campaignid string) (string, error) {
+func GetActiveCampaignEvent(campaignid string) (string, error) {
 	var eventid, cid string
 	var starttime, endtime int64
 	rows, err := dbCampaigns.Query("SELECT eventid, campaignid, starttime, endtime FROM events")
@@ -665,6 +732,21 @@ func getActiveCampaignEvent(campaignid string) (string, error) {
 		}
 	}
 	return eventid, nil
+}
+
+/*
+GetEventMatchIDs gets a list of matchids from a given event
+*/
+func GetEventMatchIDs(eventid string) []string {
+	var matchid string
+	matchids := make([]string, 0)
+	rows, _ := dbCampaigns.Query(fmt.Sprintf("SELECT matchid FROM matches WHERE eventid='%s'", eventid))
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&matchid)
+		matchids = append(matchids, matchid)
+	}
+	return matchids
 }
 
 /*

@@ -17,7 +17,7 @@
 <option value="Shooting Points">Color Wheel</option>
 <option value="Color Wheel Points">Fouls</option>
 </select>
-<table>
+<table id="matchdata">
     <tr>
         <th>Match #</th>
         <th>Teams</th>
@@ -66,7 +66,29 @@
 <p id="colorwheel">Color Wheel: {{.ColorWheel}}</p>
 <p id="climbing">Climbing: {{.Climbing}}</p>
 <p id="fouls">Fouls: {{.Fouls}}</p>
-<h2>Graphs</h2>
+<h2>Match History</h2>
+<table id="teamdata">
+    <tr>
+        <th>Overall Performance</th>
+        <th>Teammates</th>
+        <th>Opponents</th>
+        <th>Autonomous</th>
+        <th>Shooting</th>
+        <th>Color Wheel</th>
+        <th>Climb Status</th>
+        <th>Balanced</th>
+        <th>Fouls</th>
+    </tr>
+</table>
+<h3>Graphs</h3>
+<select id="graphselect" onChange="">
+<option value="Overall">Overall</option>
+<option value="Auto">Auto</option>
+<option value="Shooting">Shooting</option>
+<option value="ColorWheel">Color Wheel</option>
+<option value="Fouls">Fouls</option>
+</select>
+<img id="preformance"></img>
 <h2>Pit Scout Data</h2>
 <p id="cycletime">Cycle Time: {{.Cycle}}</p>
 <p id="notes">{{.Notes}}</p>

@@ -29,7 +29,7 @@ func Data(c *gin.Context) {
 		campaign, _ := db.GetTeamCampaign(teamID)
 		overall := calc.TeamOverall(team, campaign)
 		auto := calc.TeamAuto(team, campaign)
-		shooting := calc.TeamAuto(team, campaign)
+		shooting := calc.TeamShooting(team, campaign)
 		colorwheel := calc.TeamColorWheel(team, campaign)
 		climbing := calc.TeamClimbing(team, campaign)
 		fouls := calc.TeamFoul(team, campaign)
@@ -52,7 +52,6 @@ func TeamDataGet(c *gin.Context) {
 		sortby = "Overall"
 	}
 	searchind := where(teamSortKeys, sortby)
-	fmt.Println(sortby, searchind)
 	//TODO: get each match from database and sort based on the querystring
 	scores := calc.GetTeamScores(campaign)
 	for x := len(scores) - 1; x >= 0; x-- {
@@ -71,7 +70,20 @@ func TeamDataGet(c *gin.Context) {
 		}
 	}
 	csvString := build.String()
+	MatchDataGet(c)
 	c.String(http.StatusOK, "text", csvString)
+}
+
+/*
+MatchDataGet gets list of match data to display on match data page
+*/
+func MatchDataGet(c *gin.Context) {
+	//var builder strings.Builder
+	//team, _ := strconv.Atoi(c.Query("team"))
+	userTeam, _ := strconv.Atoi(auth.CheckTeam(c))
+	userTeamID, _ := db.GetTeamID(userTeam)
+	campaign, _ := db.GetTeamCampaign(userTeamID)
+	fmt.Println(campaign)
 }
 
 func contains(arr []string, val string) bool {

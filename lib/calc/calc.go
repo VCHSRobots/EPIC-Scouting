@@ -4,11 +4,54 @@ Package calc provides functions for calculating various game statistics.
 package calc
 
 import (
+	"errors"
+	"fmt"
 	"math"
 	"sort"
 
 	"EPIC-Scouting/lib/db"
 )
+
+/*
+MatchResults summary of match results. A culmination of all data on a given match
+*/
+type MatchResults struct {
+	RedParticipants              []int
+	BlueParticipants             []int
+	RedPoints                    int
+	BluePoints                   int
+	Winner                       string
+	RedRankingPoints             int
+	BlueRankingPoints            int
+	RedAutoLineCrosses           int
+	BlueAutoLineCrosses          int
+	RedAutoPoints                int
+	BlueAutoPoints               int
+	RedAutoBalls                 int
+	BlueAutoBalls                int
+	RedShootingPoints            int
+	BlueShootingPoints           int
+	RedTeleopShots               int
+	BlueTeleopShots              int
+	RedLowShots                  int
+	BlueLowShots                 int
+	RedHighShots                 int
+	BlueHighShots                int
+	RedBackShots                 int
+	BlueBackShots                int
+	RedShieldStage               int
+	BlueShieldStage              int
+	RedColorWheelStageTwoTime    int
+	BlueColorWheelStageTwoTime   int
+	RedColorWheelStageThreeTime  int
+	BlueColorWheelStageThreeTime int
+	RedClimbStatus               []int
+	BlueClimbStatus              []int
+	RedBalanced                  bool
+	BlueBalanced                 bool
+	RedClimbPoints               int
+	BlueClimbPoints              int
+}
 
 /*
 GetTeamScores gets all team breakdown scores from the active event in a campaign
@@ -25,9 +68,241 @@ func GetTeamScores(campaignid string) [][]int {
 		teamData[match.Team] = append(teamData[match.Team], match)
 	}
 	for team, matches := range teamData {
-		scores = append(scores, []int{team, Overall(matches), Auto(matches), Shooting(matches), Climbing(matches), ColorWheel(matches), Foul(matches)})
+		scores = append(scores, []int{team, Overall(matches), Auto(matches), Shooting(matches), ColorWheel(matches), Climbing(matches), Foul(matches)})
 	}
 	return scores
+}
+
+/*
+GetMatchData gets a summary of match scores for the red and blue alliances respectively
+*/
+func GetMatchData(matchid string) (MatchResults, error) {
+	var matchParticipants [][]int
+	var results MatchResults
+	var participantScores []db.MatchData
+	var scores [][]db.MatchData
+	var err error
+	matchParticipants = db.GetMatchParticipants(matchid)
+	for alliance := range matchParticipants {
+		participantScores = make([]db.MatchData, 0)
+		for _, team := range matchParticipants[alliance] {
+			participantScores = append(participantScores, ResolveMatchConflicts(team, matchid))
+		}
+		scores = append(scores, participantScores)
+	}
+	results, err = deriveMatchScores(scores[0], scores[1])
+	return results, err
+}
+
+func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
+	var summary MatchResults
+	var count, redPoints, bluePoints, redRP, blueRP int
+	if len(red) == 0 || len(blue) == 0 {
+		return summary, errors.New("Unable to summarize match: no data provided for one or more alliances")
+	}
+	participants := db.GetMatchParticipants(red[0].MatchID)
+	summary.RedParticipants = participants[0]
+	summary.BlueParticipants = participants[1]
+	for _, teamdata := range red {
+		if teamdata.AutoLineCross {
+			count++
+		}
+	}
+	summary.RedAutoLineCrosses = count
+	count = 0
+	for _, teamdata := range blue {
+		if teamdata.AutoLineCross {
+			count++
+		}
+	}
+	summary.BlueAutoLineCrosses = count
+	count = 0
+	for _, teamdata := range red {
+		if teamdata.AutoLineCross {
+			//add points for auto line cross
+			count += 5
+		}
+		count += 2*teamdata.AutoLowBalls + 4*teamdata.AutoHighBalls + 6*teamdata.AutoBackBalls
+	}
+	summary.RedAutoPoints = count
+	redPoints += count
+	count = 0
+	for _, teamdata := range blue {
+		if teamdata.AutoLineCross {
+			//add points for auto line cross
+			count += 5
+		}
+		count += 2*teamdata.AutoLowBalls + 4*teamdata.AutoHighBalls + 6*teamdata.AutoBackBalls
+	}
+	summary.BlueAutoPoints = count
+	bluePoints += count
+	count = 0
+	for _, teamdata := range red {
+		count += teamdata.AutoLowBalls + teamdata.AutoHighBalls + teamdata.AutoBackBalls
+	}
+	summary.RedAutoBalls = count
+	count = 0
+	for _, teamdata := range blue {
+		count += teamdata.AutoLowBalls + teamdata.AutoHighBalls + teamdata.AutoBackBalls
+	}
+	summary.BlueAutoBalls = count
+	count = 0
+	for _, teamdata := range red {
+		count += teamdata.LowFuel + teamdata.HighFuel*2 + teamdata.BackFuel*3
+	}
+	summary.RedShootingPoints = count
+	redPoints += count
+	count = 0
+	for _, teamdata := range blue {
+		count += teamdata.LowFuel + teamdata.HighFuel*2 + teamdata.BackFuel*3
+	}
+	summary.BlueShootingPoints = count
+	bluePoints += count
+	count = 0
+	for _, teamdata := range red {
+		count += teamdata.LowFuel + teamdata.HighFuel + teamdata.BackFuel
+	}
+	summary.RedTeleopShots = count
+	count = 0
+	for _, teamdata := range blue {
+		count += teamdata.LowFuel + teamdata.HighFuel + teamdata.BackFuel
+	}
+	summary.BlueTeleopShots = count
+	count = 0
+	for _, teamdata := range red {
+		count += teamdata.LowFuel
+	}
+	summary.RedLowShots = count
+	count = 0
+	for _, teamdata := range blue {
+		count += teamdata.LowFuel
+	}
+	summary.BlueLowShots = count
+	count = 0
+	for _, teamdata := range red {
+		count += teamdata.HighFuel
+	}
+	summary.RedHighShots = count
+	count = 0
+	for _, teamdata := range blue {
+		count += teamdata.HighFuel
+	}
+	summary.BlueHighShots = count
+	count = 0
+	for _, teamdata := range red {
+		count += teamdata.BackFuel
+	}
+	summary.RedBackShots = count
+	count = 0
+	for _, teamdata := range blue {
+		count += teamdata.BackFuel
+	}
+	summary.BlueBackShots = count
+	count = 0
+	//TODO stage one and two should be stages two and three
+	//TODO update point values for each stage complete
+	if red[0].StageOneComplete {
+		if red[0].StageTwoComplete {
+			summary.RedShieldStage = 3
+			redPoints += 50
+			redRP++
+		} else {
+			summary.RedShieldStage = 2
+			redPoints += 30
+		}
+	} else if summary.RedAutoBalls+summary.RedTeleopShots >= 20 {
+		summary.RedShieldStage = 1
+		redPoints += 10 //???
+	}
+	if blue[0].StageOneComplete {
+		if blue[0].StageTwoComplete {
+			summary.BlueShieldStage = 3
+			bluePoints += 50
+			blueRP++
+		} else {
+			summary.BlueShieldStage = 2
+			bluePoints += 30
+		}
+	} else if summary.RedAutoBalls+summary.RedTeleopShots >= 20 {
+		summary.BlueShieldStage = 1
+		bluePoints += 10 //???
+	}
+	for _, teamdata := range red {
+		if teamdata.StageOneTime != 0 {
+			summary.RedColorWheelStageTwoTime = teamdata.StageOneTime
+		}
+	}
+	for _, teamdata := range blue {
+		if teamdata.StageOneTime != 0 {
+			summary.BlueColorWheelStageTwoTime = teamdata.StageOneTime
+		}
+	}
+	for _, teamdata := range red {
+		if teamdata.StageOneTime != 0 {
+			summary.RedColorWheelStageThreeTime = teamdata.StageTwoTime
+		}
+	}
+	for _, teamdata := range blue {
+		if teamdata.StageOneTime != 0 {
+			summary.BlueColorWheelStageThreeTime = teamdata.StageTwoTime
+		}
+	}
+	for _, teamdata := range red {
+		if teamdata.Climbed == "climbed" {
+			summary.RedClimbStatus = append(summary.RedClimbStatus, 2)
+			count += 25
+		} else if teamdata.Climbed == "platform" {
+			summary.RedClimbStatus = append(summary.RedClimbStatus, 1)
+			count += 5
+		} else {
+			summary.RedClimbStatus = append(summary.RedClimbStatus, 0)
+		}
+	}
+	if red[0].Balanced {
+		summary.RedBalanced = true
+		count += 15
+	}
+	//award climbing ranking point if condition met
+	if count >= 60 {
+		redRP++
+	}
+	summary.RedClimbPoints = count
+	redPoints += count
+	count = 0
+	for _, teamdata := range blue {
+		if teamdata.Climbed == "climbed" {
+			summary.BlueClimbStatus = append(summary.RedClimbStatus, 2)
+			count += 25
+		} else if teamdata.Climbed == "platform" {
+			summary.BlueClimbStatus = append(summary.RedClimbStatus, 1)
+			count += 5
+		} else {
+			summary.BlueClimbStatus = append(summary.RedClimbStatus, 0)
+		}
+	}
+	if blue[0].Balanced {
+		summary.BlueBalanced = true
+		count += 15
+	}
+	//award climbing ranking point if condition met
+	if count >= 60 {
+		blueRP++
+	}
+	summary.BlueClimbPoints = count
+	bluePoints += count
+	count = 0
+	summary.RedPoints = redPoints
+	summary.BluePoints = bluePoints
+	if redPoints > bluePoints {
+		summary.Winner = "red"
+		redRP += 2
+	} else {
+		summary.Winner = "blue"
+		blueRP += 2
+	}
+	summary.RedRankingPoints = redRP
+	summary.BlueRankingPoints = blueRP
+	return summary, nil
 }
 
 //RawTeamEventData gets a team's raw statistics for an event - best for putting on spreadsheets for raw comparison/printout
@@ -147,20 +422,21 @@ func TeamAutoBreakdown(teamNum int, campaignID string) []int {
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		if match.AutoLineCross {
-			breakdown[0] = 1 / len(*matches)
+			breakdown[0]++
 		}
-		breakdown[1] += match.AutoBackBalls / len(*matches)
-		breakdown[2] += match.AutoHighBalls / len(*matches)
-		breakdown[3] += match.AutoLowBalls / len(*matches)
-		breakdown[4] += match.AutoShots / len(*matches)
-		breakdown[5] += match.AutoPickups / len(*matches)
+		breakdown[1] += match.AutoBackBalls
+		breakdown[2] += match.AutoHighBalls
+		breakdown[3] += match.AutoLowBalls
+		breakdown[4] += match.AutoShots
+		breakdown[5] += match.AutoPickups
 		if match.AutoShots-match.AutoLowBalls != 0 {
-			breakdown[6] += (match.AutoBackBalls + match.AutoHighBalls) / (match.AutoShots - match.AutoLowBalls) / len(*matches)
-		} else {
-			breakdown[6] = 0
+			breakdown[6] += (match.AutoBackBalls + match.AutoHighBalls) / (match.AutoShots - match.AutoLowBalls)
 		}
 		//total auto points
-		breakdown[7] += breakdown[0]*15 + match.AutoBackBalls*6 + match.AutoHighBalls*4 + match.AutoLowBalls*2/len(*matches)
+		breakdown[7] += breakdown[0]*15 + match.AutoBackBalls*6 + match.AutoHighBalls*4 + match.AutoLowBalls*2
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(*matches))))
 	}
 	return breakdown
 }
@@ -173,18 +449,19 @@ func TeamShootingBreakdown(teamNum int, campaignid string) []int {
 	matches, _ := db.GetTeamResults(teamNum, campaignid)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
-		breakdown[0] += match.ShotQuantity / len(*matches)
-		breakdown[1] += match.LowFuel / len(*matches)
-		breakdown[2] += match.HighFuel / len(*matches)
-		breakdown[3] += match.BackFuel / len(*matches)
+		breakdown[0] += match.ShotQuantity
+		breakdown[1] += match.LowFuel
+		breakdown[2] += match.HighFuel
+		breakdown[3] += match.BackFuel
 		if match.ShotQuantity-match.LowFuel != 0 {
-			breakdown[4] += (match.HighFuel + match.BackFuel) / (match.ShotQuantity - match.LowFuel) / len(*matches)
-		} else {
-			breakdown[4] = 0
+			breakdown[4] += (match.HighFuel + match.BackFuel) / (match.ShotQuantity - match.LowFuel)
 		}
-		breakdown[5] = match.LowFuel + match.HighFuel + match.BackFuel/len(*matches)
+		breakdown[5] += match.LowFuel + match.HighFuel + match.BackFuel
 		//total auto points
-		breakdown[6] += match.LowFuel*1 + match.HighFuel*2 + match.BackFuel*3/len(*matches)
+		breakdown[6] += match.LowFuel*1 + match.HighFuel*2 + match.BackFuel*3
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(*matches))))
 	}
 	return breakdown
 }
@@ -198,20 +475,19 @@ func TeamClimbingBreakdown(teamNum int, campaignID string) []int {
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		if match.Climbed == "climbed" {
-			breakdown[0] = 2 / len(*matches)
+			breakdown[0] += 2
 		} else if match.Climbed == "platform" {
-			breakdown[0] = 1 / len(*matches)
-		} else {
-			breakdown[0] = 0 / len(*matches)
+			breakdown[0]++
 		}
-		if match.ClimbTime == 0 {
-			breakdown[1] = 0
-		} else {
-			breakdown[1] += 100 / match.ClimbTime / len(*matches)
+		if !(match.ClimbTime == 0) {
+			breakdown[1] += 100 / match.ClimbTime
 		}
 		if match.Balanced {
-			breakdown[2] = 1 / len(*matches)
+			breakdown[2]++
 		}
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(*matches))))
 	}
 	return breakdown
 }
@@ -224,8 +500,11 @@ func TeamColorWheelBreakdown(teamNum int, campaignID string) []int {
 	matches, _ := db.GetTeamResults(teamNum, campaignID)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
-		breakdown[0] += match.StageOneTime / len(*matches)
-		breakdown[1] += match.StageTwoTime / len(*matches)
+		breakdown[0] += match.StageOneTime
+		breakdown[1] += match.StageTwoTime
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(*matches))))
 	}
 	return breakdown
 }
@@ -238,17 +517,18 @@ func TeamFoulBreakdown(teamNum int, campaignID string) []int {
 	matches, _ := db.GetTeamResults(teamNum, campaignID)
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
-		breakdown[0] += match.Fouls / len(*matches)
-		breakdown[1] += match.TechFouls / len(*matches)
-		breakdown[2] += match.Fouls*3 + match.TechFouls*15/len(*matches)
+		breakdown[0] += match.Fouls
+		breakdown[1] += match.TechFouls
+		breakdown[2] += match.Fouls*3 + match.TechFouls*15
 		//0=no card, 1=yellow card, 2=red card
 		if match.Card == "red" {
-			breakdown[3] = 2 / len(*matches)
+			breakdown[3] += 2
 		} else if match.Card == "yellow" {
-			breakdown[3] = 1 / len(*matches)
-		} else {
-			breakdown[3] = 0 / len(*matches)
+			breakdown[3]++
 		}
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(*matches))))
 	}
 	return breakdown
 }
@@ -327,20 +607,21 @@ func AutoBreakdown(matches []db.MatchData) []int {
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
 		if match.AutoLineCross {
-			breakdown[0] = 1 / len(matches)
+			breakdown[0]++
 		}
-		breakdown[1] += match.AutoBackBalls / len(matches)
-		breakdown[2] += match.AutoHighBalls / len(matches)
-		breakdown[3] += match.AutoLowBalls / len(matches)
-		breakdown[4] += match.AutoShots / len(matches)
-		breakdown[5] += match.AutoPickups / len(matches)
+		breakdown[1] += match.AutoBackBalls
+		breakdown[2] += match.AutoHighBalls
+		breakdown[3] += match.AutoLowBalls
+		breakdown[4] += match.AutoShots
+		breakdown[5] += match.AutoPickups
 		if match.AutoShots-match.AutoLowBalls != 0 {
-			breakdown[6] += (match.AutoBackBalls + match.AutoHighBalls) / (match.AutoShots - match.AutoLowBalls) / len(matches)
-		} else {
-			breakdown[6] = 0
+			breakdown[6] += (match.AutoBackBalls + match.AutoHighBalls) / (match.AutoShots - match.AutoLowBalls)
 		}
 		//total auto points
-		breakdown[7] += breakdown[0]*15 + match.AutoBackBalls*6 + match.AutoHighBalls*4 + match.AutoLowBalls*2/len(matches)
+		breakdown[7] += breakdown[0]*15 + match.AutoBackBalls*6 + match.AutoHighBalls*4 + match.AutoLowBalls*2
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(matches))))
 	}
 	return breakdown
 }
@@ -351,18 +632,19 @@ func ShootingBreakdown(matches []db.MatchData) []int {
 	//matches is a list of the results struct
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
-		breakdown[0] += match.ShotQuantity / len(matches)
-		breakdown[1] += match.LowFuel / len(matches)
-		breakdown[2] += match.HighFuel / len(matches)
-		breakdown[3] += match.BackFuel / len(matches)
+		breakdown[0] += match.ShotQuantity
+		breakdown[1] += match.LowFuel
+		breakdown[2] += match.HighFuel
+		breakdown[3] += match.BackFuel
 		if match.ShotQuantity-match.LowFuel != 0 {
-			breakdown[4] += (match.HighFuel + match.BackFuel) / (match.ShotQuantity - match.LowFuel) / len(matches)
-		} else {
-			breakdown[4] = 0
+			breakdown[4] += (match.HighFuel + match.BackFuel) / (match.ShotQuantity - match.LowFuel)
 		}
-		breakdown[5] = match.LowFuel + match.HighFuel + match.BackFuel/len(matches)
+		breakdown[5] += match.LowFuel + match.HighFuel + match.BackFuel
 		//total auto points
-		breakdown[6] += match.LowFuel*1 + match.HighFuel*2 + match.BackFuel*3/len(matches)
+		breakdown[6] += match.LowFuel*1 + match.HighFuel*2 + match.BackFuel*3
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(matches))))
 	}
 	return breakdown
 }
@@ -374,20 +656,19 @@ func ClimbingBreakdown(matches []db.MatchData) []int {
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
 		if match.Climbed == "climbed" {
-			breakdown[0] = 2 / len(matches)
+			breakdown[0] += 2
 		} else if match.Climbed == "platform" {
-			breakdown[0] = 1 / len(matches)
-		} else {
-			breakdown[0] = 0
+			breakdown[0]++
 		}
-		if match.ClimbTime == 0 {
-			breakdown[1] = 0
-		} else {
-			breakdown[1] += 100 / match.ClimbTime / len(matches)
+		if !(match.ClimbTime == 0) {
+			breakdown[1] += 100 / match.ClimbTime
 		}
 		if match.Balanced {
-			breakdown[2] = 1 / len(matches)
+			breakdown[2] += 1 / len(matches)
 		}
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(matches))))
 	}
 	return breakdown
 }
@@ -398,8 +679,11 @@ func ColorWheelBreakdown(matches []db.MatchData) []int {
 	//matches is a list of the results struct
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
-		breakdown[0] += match.StageOneTime / len(matches)
-		breakdown[1] += match.StageTwoTime / len(matches)
+		breakdown[0] += match.StageOneTime
+		breakdown[1] += match.StageTwoTime
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(matches))))
 	}
 	return breakdown
 }
@@ -410,17 +694,18 @@ func FoulBreakdown(matches []db.MatchData) []int {
 	//matches is a list of the results struct
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
-		breakdown[0] += match.Fouls / len(matches)
-		breakdown[1] += match.TechFouls / len(matches)
-		breakdown[2] += match.Fouls*3 + match.TechFouls*15/len(matches)
+		breakdown[0] += match.Fouls
+		breakdown[1] += match.TechFouls
+		breakdown[2] += match.Fouls*3 + match.TechFouls*15
 		//0=no card, 1=yellow card, 2=red card
 		if match.Card == "red" {
-			breakdown[3] = 2 / len(matches)
+			breakdown[3] += 2
 		} else if match.Card == "yellow" {
-			breakdown[3] = 1 / len(matches)
-		} else {
-			breakdown[3] = 0
+			breakdown[3]++
 		}
+	}
+	for ind, val := range breakdown {
+		breakdown[ind] = int(math.Round(float64(val) / float64(len(matches))))
 	}
 	return breakdown
 }
@@ -445,8 +730,186 @@ func FoulBreakdown(matches []db.MatchData) []int {
 
 //RankScouterGlobal
 
+/*
+Match Summary functions use the scouter data on matches to summarize their results
+*/
+
+/*
+DeriveMatchData pulls all data from a match into a summary of that match
+*/
+func DeriveMatchData(matchID string) MatchResults {
+	var results MatchResults
+	//matchResults = match.MatchResults(matchID)
+	return results
+}
+
 /*Match Census Functions determine the weight of contradictary data on the same match and return a score useable for the system*/
 //Below are differing census methods. They may or may not be used.
+
+/*
+ResolveMatchConflicts takes multiple scouter's data that may contradict and combines it, eliminating outliers
+*/
+func ResolveMatchConflicts(teamNum int, matchid string) db.MatchData {
+	var resolved db.MatchData
+	data, _ := db.GetTeamMatchResults(teamNum, matchid)
+	resolved = ResolveDataConflicts(*data)
+	return resolved
+}
+
+/*
+ResolveDataConflicts resolves discrepencies between scouting data
+*/
+func ResolveDataConflicts(data []db.MatchData) db.MatchData {
+	var resolved db.MatchData
+	autoLowBallsList := make([]int, len(data))
+	autoHighBallsList := make([]int, len(data))
+	autoBackBallsList := make([]int, len(data))
+	autoShotsList := make([]int, len(data))
+	autoPickupsList := make([]int, len(data))
+	shotQuantityList := make([]int, len(data))
+	lowFuelList := make([]int, len(data))
+	highFuelList := make([]int, len(data))
+	backFuelList := make([]int, len(data))
+	stageOneTimeList := make([]int, len(data))
+	stageTwoTimeList := make([]int, len(data))
+	foulsList := make([]int, len(data))
+	techFoulsList := make([]int, len(data))
+	climbTimeList := make([]int, len(data))
+	autoLineCrossList := make([]bool, len(data))
+	stageOneCompleteList := make([]bool, len(data))
+	stageTwoCompleteList := make([]bool, len(data))
+	balancedList := make([]bool, len(data))
+	cardList := make([]string, len(data))
+	climbedList := make([]string, len(data))
+	for ind, d := range data {
+		autoLowBallsList[ind] = d.AutoLowBalls
+		autoHighBallsList[ind] = d.AutoHighBalls
+		autoBackBallsList[ind] = d.AutoBackBalls
+		autoShotsList[ind] = d.AutoShots
+		autoPickupsList[ind] = d.AutoPickups
+		shotQuantityList[ind] = d.ShotQuantity
+		lowFuelList[ind] = d.LowFuel
+		highFuelList[ind] = d.HighFuel
+		backFuelList[ind] = d.BackFuel
+		stageOneTimeList[ind] = d.StageOneTime
+		stageTwoTimeList[ind] = d.StageTwoTime
+		foulsList[ind] = d.Fouls
+		techFoulsList[ind] = d.TechFouls
+		climbTimeList[ind] = d.ClimbTime
+		autoLineCrossList[ind] = d.AutoLineCross
+		stageOneCompleteList[ind] = d.StageOneComplete
+		stageTwoCompleteList[ind] = d.StageTwoComplete
+		balancedList[ind] = d.Balanced
+		cardList[ind] = d.Card
+		climbedList[ind] = d.Climbed
+	}
+	resolved.AutoLowBalls = resolveInt(autoLowBallsList)
+	resolved.AutoHighBalls = resolveInt(autoHighBallsList)
+	resolved.AutoBackBalls = resolveInt(autoBackBallsList)
+	resolved.AutoShots = resolveInt(autoShotsList)
+	resolved.AutoPickups = resolveInt(autoPickupsList)
+	resolved.ShotQuantity = resolveInt(shotQuantityList)
+	resolved.LowFuel = resolveInt(lowFuelList)
+	resolved.HighFuel = resolveInt(highFuelList)
+	resolved.BackFuel = resolveInt(backFuelList)
+	resolved.StageOneTime = resolveInt(stageOneTimeList)
+	resolved.StageTwoTime = resolveInt(stageTwoTimeList)
+	resolved.Fouls = resolveInt(foulsList)
+	resolved.TechFouls = resolveInt(techFoulsList)
+	resolved.ClimbTime = resolveIntMean(climbTimeList)
+	resolved.AutoLineCross = resolveBool(autoLineCrossList)
+	resolved.StageOneComplete = resolveBool(stageOneCompleteList)
+	resolved.StageTwoComplete = resolveBool(stageTwoCompleteList)
+	resolved.Balanced = resolveBool(balancedList)
+	resolved.Card = resolveString(cardList)
+	resolved.Climbed = resolveString(climbedList)
+	return resolved
+}
+
+func resolveInt(arr []int) int {
+	var resolved, maxCount int
+	occuranceCount := make(map[int]int)
+	for _, val := range arr {
+		_, ok := occuranceCount[val]
+		if !ok {
+			occuranceCount[val] = 1
+		}
+		occuranceCount[val]++
+	}
+	for key, val := range occuranceCount {
+		if val > maxCount {
+			maxCount = val
+			resolved = key
+		}
+	}
+	return resolved
+}
+
+func resolveIntMean(arr []int) int {
+	var resolved, total, counted int
+	outliers := StatisticalOutliers(arr)
+	for _, val := range arr {
+		if !contains(outliers, val) {
+			total += val
+			counted++
+		}
+	}
+	if counted == 0 {
+		return 0
+	}
+	resolved = total / counted
+	return resolved
+}
+
+func resolveBool(arr []bool) bool {
+	var resolved bool
+	var maxCount int
+	occuranceCount := make(map[bool]int)
+	for _, val := range arr {
+		_, ok := occuranceCount[val]
+		if !ok {
+			occuranceCount[val] = 1
+		}
+		occuranceCount[val]++
+	}
+	for key, val := range occuranceCount {
+		if val > maxCount {
+			maxCount = val
+			resolved = key
+		}
+	}
+	return resolved
+}
+
+func resolveString(arr []string) string {
+	var resolved string
+	maxCount := 0
+	occuranceCount := make(map[string]int)
+	for _, val := range arr {
+		_, ok := occuranceCount[val]
+		if !ok {
+			occuranceCount[val] = 1
+		}
+		occuranceCount[val]++
+	}
+	for key, val := range occuranceCount {
+		fmt.Println(key, val, maxCount, resolved)
+		if val > maxCount {
+			maxCount = val
+			resolved = key
+		}
+	}
+	return resolved
+}
+
+func contains(arr []int, val int) bool {
+	for _, x := range arr {
+		if x == val {
+			return true
+		}
+	}
+	return false
+}
 
 //IsUnanimous checks if data has significant disagreements - this usually means non-identical pieces of data unless we had something dealing in decimals/seconds
 
@@ -492,13 +955,17 @@ func DemocraticOutliers(data []float64) []float64 {
 }
 
 //StatisticalOutliers - Checks for outliers outside +/-1.5 of the interquartile range
-func StatisticalOutliers(data []float64) []float64 {
-	outliers := make([]float64, 0, len(data))
-	mean := mean(data)
-	iqr := findIQR(data)
-	for _, num := range data {
+func StatisticalOutliers(data []int) []int {
+	data64 := make([]float64, len(data))
+	for ind, val := range data {
+		data64[ind] = float64(val)
+	}
+	outliers := make([]int, len(data64))
+	mean := mean(data64)
+	iqr := findIQR(data64)
+	for ind, num := range data64 {
 		if num > mean+iqr*1.5 || num < mean-iqr*1.5 {
-			outliers = append(outliers, num)
+			outliers[ind] = int(num)
 		}
 	}
 	return outliers
@@ -520,6 +987,9 @@ func findIQR(data []float64) float64 {
 
 func findMedian(data []float64) float64 {
 	var median float64
+	if len(data) == 0 {
+		return 0
+	}
 	sort.Float64s(data)
 	if len(data)%2 == 1 {
 		median = data[len(data)-1]
