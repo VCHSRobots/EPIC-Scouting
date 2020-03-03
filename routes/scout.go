@@ -4,7 +4,6 @@ import (
 	"EPIC-Scouting/lib/auth"
 	"EPIC-Scouting/lib/db"
 	"EPIC-Scouting/lib/web"
-	"fmt"
 
 	"net/http"
 
@@ -37,13 +36,14 @@ func Scout(c *gin.Context) {
 func MatchPOST(c *gin.Context) {
 	var data MatchData
 	c.ShouldBindJSON(&data)
-	//postData := data.Data[0]
 	//gets uuid to associate with data
-	uuid, _ := auth.LoginCookie(c)
-	team, _ := c.Cookie("team")
-	if uuid != "" {
-		err := db.StoreMatch(data.Data[0], uuid, team)
-		fmt.Println(err)
+	userID := auth.CheckLogin(c)
+	//original team id do not steal
+	//testTeamID := "4415epicrobotz"
+	//Put testing team and match ids here from inital print
+	testTeamID := "7df56807-06e7-4eb2-990a-37adb8561efe"
+	if userID != "" {
+		db.StoreMatch(data.Data[0], userID, testTeamID)
 	} else {
 		Forbidden(c)
 	}

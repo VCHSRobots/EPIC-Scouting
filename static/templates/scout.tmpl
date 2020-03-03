@@ -12,6 +12,9 @@
   <label for="autoLineCross">Crossed Auto Line?:</label>
   yes:<input type="radio" name="autoLineCross" value="1" checked>
   no:<input type="radio" name="autoLineCross" value="0"><br>
+  <label for="alliance">Crossed Auto Line?:</label>
+  Red:<input type="radio" name="alliance" value="1" checked>
+  Blue:<input type="radio" name="alliance" value="0"><br>
   <label for="autoHighBalls">High Balls:</label>
   <input type="text" name="autoHighBalls" value="0">
   <input type="button" name="ahbinc", value="+" onClick="this.form.autoHighBalls.value++">
@@ -24,6 +27,10 @@
   <input type="text" name="autoLowBalls" value="0">
   <input type="button" name="albinc", value="+" onClick="this.form.autoLowBalls.value++">
   <input type="button" name="albdec", value="-" onClick="this.form.autoLowBalls.value--"><br>
+  <label for="autoShots">Shots Taken:</label>
+  <input type="text" name="autoShots" value="0">
+  <input type="button" name="ashotsinc", value="+" onClick="this.form.autoShots.value++">
+  <input type="button" name="ashotsdec", value="-" onClick="this.form.autoShots.value--"><br>
   <label for="autoPickups">Ball Pickups:</label>
   <input type="text" name="autoPickups" value="0">
   <input type="button" name="apinc", value="+" onClick="this.form.autoPickups.value++">
@@ -88,9 +95,9 @@
   <input type="radio" name="climbed" value="1" checked>
   <label for="climbed">N/A: </label>
   <input type="radio" name="climbed" value="0" checked><br>
-  <label for="balanceBool">Balanced?</label>
-  yes: <input type="radio" name="balanceBool" value="yes">
-  no: <input type="radio" name="balanceBool" value="no" checked><br>
+  <label for="balanced">Balanced?</label>
+  yes: <input type="radio" name="balanced" value="1">
+  no: <input type="radio" name="balanced" value="0" checked><br>
   <label for="climbTime">Time:</label>
   <input type="text" name="climbTime" value="4415">
   <input type="button" name="ctinc", value="+" onClick="this.form.climbTime.value++">

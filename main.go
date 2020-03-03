@@ -95,6 +95,7 @@ func start(port int) {
 	router.GET("/teamData", routes.TeamData)
 	router.GET("/teamAdmin", routes.TeamAdmin)
 	router.GET("/data", routes.Data)
+	router.GET("/teamDataGet", routes.TeamDataGet)
 	router.GET("/getGraph", routes.GetGraph)
 	log.Debugf("Serving on port %d.", port)
 	log.Fatal(router.Run(address))

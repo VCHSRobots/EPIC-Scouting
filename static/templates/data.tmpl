@@ -9,7 +9,15 @@
 {{end}}
 {{if .MatchData}}
 <h1>Match Data</h1>
-<table>
+<select id="datasort" onChange="sortMatchTableBy('datasort')">
+<option value="Match #">Team</option>
+<option value="Red Score" selected="selected">Overall</option>
+<option value="Blue Score">Auto</option>
+<option value="Auto Points">Shooting</option>
+<option value="Shooting Points">Color Wheel</option>
+<option value="Color Wheel Points">Fouls</option>
+</select>
+<table id="matchdata">
     <tr>
         <th>Match #</th>
         <th>Teams</th>
@@ -21,8 +29,9 @@
 {{end}}
 {{if .TeamOverall}}
 <h1>Team Data</h1>
-<select onchange="changeSortMethod()">
-<option value="Overall">Overall</option>
+<select id="datasort" onChange="sortTeamTableBy('datasort')">
+<option value="Team">Team</option>
+<option value="Overall" selected="selected">Overall</option>
 <option value="Auto">Auto</option>
 <option value="Shooting">Shooting</option>
 <option value="ColorWheel">Color Wheel</option>
@@ -30,6 +39,7 @@
 </select>
 <table id="teamdata">
     <tr>
+        <th>Team</th>
         <th>Overall</th>
         <th>Autonomous</th>
         <th>Shooting</th>
@@ -42,16 +52,43 @@
 {{end}}
 {{if .TeamProfile}}
 <h1>Team Profile<h1>
+<form onSubmit="">
+    <p>Search for Team</p><input type="field" name="team" id="team"><br>
+    <input type="button" value="Search" onClick="gotoTeamProfile(document.getElementById('team').value)">
+    <input type="hidden" id="display" name="display" value="teamprofile">
+</form>
 <h2>Robot Image<h2>
 <img id="robot"></img>
 <h2>Average Scores</h2>
-<p id="overall">{{.Overall}}</p>
-<p id="auto">{{.Auto}}</p>
-<p id="shooting">{{.Shooting}}</p>
-<p id="colorwheel">{{.ColorWheel}}</p>
-<p id="climbing">{{.Climbing}}</p>
-<p id="fouls">{{.Fouls}}</p>
-<h2>Graphs</h2>
+<p id="overall">Overall: {{.Overall}}</p>
+<p id="auto">Auto: {{.Auto}}</p>
+<p id="shooting">Shooting: {{.Shooting}}</p>
+<p id="colorwheel">Color Wheel: {{.ColorWheel}}</p>
+<p id="climbing">Climbing: {{.Climbing}}</p>
+<p id="fouls">Fouls: {{.Fouls}}</p>
+<h2>Match History</h2>
+<table id="teamdata">
+    <tr>
+        <th>Overall Performance</th>
+        <th>Teammates</th>
+        <th>Opponents</th>
+        <th>Autonomous</th>
+        <th>Shooting</th>
+        <th>Color Wheel</th>
+        <th>Climb Status</th>
+        <th>Balanced</th>
+        <th>Fouls</th>
+    </tr>
+</table>
+<h3>Graphs</h3>
+<select id="graphselect" onChange="">
+<option value="Overall">Overall</option>
+<option value="Auto">Auto</option>
+<option value="Shooting">Shooting</option>
+<option value="ColorWheel">Color Wheel</option>
+<option value="Fouls">Fouls</option>
+</select>
+<img id="preformance"></img>
 <h2>Pit Scout Data</h2>
 <p id="cycletime">Cycle Time: {{.Cycle}}</p>
 <p id="notes">{{.Notes}}</p>

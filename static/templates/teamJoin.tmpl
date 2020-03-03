@@ -2,7 +2,4 @@
 <h1>Join a team!</h1>
 <p>Here are the teams which currently exist. Click on a team to request to join it.</p>
 <p><i>Alternatively, you may create a new team <a href="/teamCreate">here</a>.</i></p>
-<ul>
-{{range .Teams}}<li><a href="/">{{.[0]}}—{{.[1]}}</a><br><i>{{.[2]}}</i></li>{{end}}
-</ul>
 {{template "footer"}}
