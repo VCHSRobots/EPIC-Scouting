@@ -2,7 +2,9 @@ package routes
 
 import (
 	"EPIC-Scouting/lib/auth"
+	"EPIC-Scouting/lib/db"
 	"EPIC-Scouting/lib/web"
+	"fmt"
 
 	"net/http"
 
@@ -38,8 +40,10 @@ func MatchPOST(c *gin.Context) {
 	//postData := data.Data[0]
 	//gets uuid to associate with data
 	uuid, _ := auth.LoginCookie(c)
+	team, _ := c.Cookie("team")
 	if uuid != "" {
-		println(uuid)
+		err := db.StoreMatch(data.Data[0], uuid, team)
+		fmt.Println(err)
 	} else {
 		Forbidden(c)
 	}

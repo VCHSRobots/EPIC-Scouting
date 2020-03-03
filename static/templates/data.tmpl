@@ -3,9 +3,9 @@
 <script src="js/data.js"></script>
 {{if .none}}
 <h1>Data</h1>
-<a href="/data?display=match">Match Data </a>
-<a href="/data?display=teamprofile">Match Data </a>
-<a href="/data?display=team">Team Data </a> 
+<a href="/data?display=match">Match Data</a>
+<a href="/data?display=teamprofile">Team Profile</a>
+<a href="/data?display=team">Team Data</a> 
 {{end}}
 {{if .MatchData}}
 <h1>Match Data</h1>
@@ -42,12 +42,20 @@
 {{end}}
 {{if .TeamProfile}}
 <h1>Team Profile<h1>
+<h2>Robot Image<h2>
 <img id="robot"></img>
-<p id="overall"></p>
-<p id="auto"></p>
-<p id="shooting"></p>
-<p id="colorwheel"></p>
-<p id="climbing"></p>
-<p id="fouls"></p>
+<h2>Average Scores</h2>
+<p id="overall">{{.Overall}}</p>
+<p id="auto">{{.Auto}}</p>
+<p id="shooting">{{.Shooting}}</p>
+<p id="colorwheel">{{.ColorWheel}}</p>
+<p id="climbing">{{.Climbing}}</p>
+<p id="fouls">{{.Fouls}}</p>
+<h2>Graphs</h2>
+<h2>Pit Scout Data</h2>
+<p id="cycletime">Cycle Time: {{.Cycle}}</p>
+<p id="notes">{{.Notes}}</p>
+<h2>Match Comments</h2>
+<p id="matchcomments">{{.Comments}}</p>
 {{end}}
 {{template "footer"}}

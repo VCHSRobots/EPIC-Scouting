@@ -7,9 +7,9 @@
 {{end}}
 <p><a href="/logout">Logout</a></p>
 <p>Your teams:</p>
-<select>
+<select id="teamselect">
 {{/* Use range to populate field. If empty, redirect from /dashboard to /teamJoin */}}
-    <option value="teamID-goes-here">4415 - EPIC Robotz</option>
+    <option value="teamID-goes-here">4415 - EPIC Robotz</option> {{/* TODO: TEMP */}}
 </select>
 <p><a href="/teamJoin"><i>Join another team</i></a></p>
 <a href="/scout?type=match">Match Scouting</a>
