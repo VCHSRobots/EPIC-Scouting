@@ -34,9 +34,6 @@ var dbUsers *sql.DB
 var dbTeams *sql.DB
 var dbCampaigns *sql.DB
 
-type MatchData struct {
-}
-
 /*
 Schedule describes the current Campaign / Event / Match a team is contributing to.
 */
