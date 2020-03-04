@@ -88,7 +88,17 @@
 <option value="ColorWheel">Color Wheel</option>
 <option value="Fouls">Fouls</option>
 </select>
-<img id="preformance"></img>
+<br>
+<button onClick="showGraph()">Show Graph</button>
+<br>
+<table cellpadding="0" cellspacing="0">
+<tr>
+    <td>
+        <img id="graph" />
+    </td>
+</tr>
+</table>
+<br>
 <h2>Pit Scout Data</h2>
 <p id="cycletime">Cycle Time: {{.Cycle}}</p>
 <p id="notes">{{.Notes}}</p>

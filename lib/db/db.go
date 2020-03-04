@@ -558,6 +558,28 @@ func GetTeamMatchResults(teamNum int, matchID string) (*[]MatchData, error) {
 }
 
 /*
+GetTeamMatches gets scouter's data based on a team id for a given match
+*/
+func GetTeamMatches(teamNum int, campaignid string) (*[]MatchData, error) {
+	data := make([]MatchData, 0)
+	competitorID := GetCompetitorID(teamNum)
+	event, _ := GetActiveCampaignEvent(campaignid)
+	fmt.Println(event, teamNum, competitorID)
+	rows, err := dbTeams.Query(fmt.Sprintf("SELECT matchnumber, matchid, autoLineCross, autoLowBalls, autoHighBalls, autoBackBalls, autoPickups, shotQuantity, lowFuel, highFuel, backFuel, stageOneComplete, stageOneTime, stageTwoComplete, stageTwoTime, fouls, techFouls, card, climbed, balanced, climbtime, comments FROM results WHERE competitorid='%s' AND eventid='%s'", competitorID, event))
+	defer rows.Close()
+	for rows.Next() {
+		var d MatchData
+		err = rows.Scan(&d.MatchNum, &d.MatchID, &d.AutoLineCross, &d.AutoLowBalls, &d.AutoHighBalls, &d.AutoBackBalls, &d.AutoPickups, &d.ShotQuantity, &d.LowFuel, &d.HighFuel, &d.BackFuel, &d.StageOneComplete, &d.StageOneTime, &d.StageTwoComplete, &d.StageTwoTime, &d.Fouls, &d.TechFouls, &d.Card, &d.Climbed, &d.Balanced, &d.ClimbTime, &d.Comments)
+		if err != nil {
+			return nil, err
+		}
+		d.Team = teamNum
+		data = append(data, d)
+	}
+	return &data, nil
+}
+
+/*
 GetEventResults gets results from all matches in an event
 */
 func GetEventResults(event string) (*[]MatchData, error) {

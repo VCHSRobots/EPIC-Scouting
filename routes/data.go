@@ -116,13 +116,98 @@ func writeCSV(arr []int) string {
 	return str.String()
 }
 
-//GetGraph gets a test graph
+//GetGraph gets a graph which responds to querystring parameters
 func GetGraph(c *gin.Context) {
+	var xAxis, yAxis string
+	matchGroups := make(map[int][]db.MatchData, 0)
+	x := make([]float64, 1)
+	y := make([]float64, 1)
+	graphSubject := c.Query("subject")
+	userTeam := c.Query("team")
+	userTeamNum, _ := strconv.Atoi(userTeam)
+	userTeamID, _ := db.GetTeamID(userTeamNum)
+	campaign, _ := db.GetTeamCampaign(userTeamID)
+	if graphSubject == "Overall" {
+		xAxis = c.Query("team")
+		yAxis = "Overall"
+		teamNum, _ := strconv.Atoi(xAxis)
+		matches, _ := db.GetTeamMatches(teamNum, campaign)
+		for _, match := range *matches {
+			_, ok := matchGroups[match.MatchNum]
+			if ok {
+				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
+			} else {
+				matchGroups[match.MatchNum] = make([]db.MatchData, 0)
+			}
+		}
+		for matchNum, matches := range matchGroups {
+			x = append(x, float64(matchNum))
+			y = append(y, float64(calc.Overall(matches)))
+		}
+	} else if graphSubject == "Auto" {
+		xAxis = c.Query("team")
+		yAxis = "Auto"
+		teamNum, _ := strconv.Atoi(xAxis)
+		matches, _ := db.GetTeamMatches(teamNum, campaign)
+		for _, match := range *matches {
+			_, ok := matchGroups[match.MatchNum]
+			if ok {
+				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
+			} else {
+				matchGroups[match.MatchNum] = make([]db.MatchData, 0)
+			}
+		}
+		for matchNum, matches := range matchGroups {
+			x = append(x, float64(matchNum))
+			y = append(y, float64(calc.Auto(matches)))
+		}
+	} else if graphSubject == "Shooting" {
+		xAxis = c.Query("team")
+		yAxis = "Shooting"
+		teamNum, _ := strconv.Atoi(xAxis)
+		matches, _ := db.GetTeamMatches(teamNum, campaign)
+		for _, match := range *matches {
+			_, ok := matchGroups[match.MatchNum]
+			if ok {
+				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
+			} else {
+				matchGroups[match.MatchNum] = make([]db.MatchData, 0)
+			}
+		}
+		for matchNum, matches := range matchGroups {
+			x = append(x, float64(matchNum))
+			y = append(y, float64(calc.Shooting(matches)))
+		}
+	} else if graphSubject == "ColorWheel" {
+		xAxis = c.Query("team")
+		yAxis = "Color Wheel"
+		teamNum, _ := strconv.Atoi(xAxis)
+		matches, _ := db.GetTeamMatches(teamNum, campaign)
+		for _, match := range *matches {
+			_, ok := matchGroups[match.MatchNum]
+			if ok {
+				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
+			} else {
+				matchGroups[match.MatchNum] = make([]db.MatchData, 0)
+			}
+		}
+		for matchNum, matches := range matchGroups {
+			x = append(x, float64(matchNum))
+			y = append(y, float64(calc.ColorWheel(matches)))
+		}
+	}
+	fmt.Println(x, y)
 	graph := chart.Chart{
+		XAxis: chart.XAxis{
+			Name: xAxis,
+		},
+		YAxis: chart.YAxis{
+			Name: yAxis,
+		},
 		Series: []chart.Series{
 			chart.ContinuousSeries{
-				XValues: []float64{1.0, 2.0, 3.0, 4.0},
-				YValues: []float64{1.0, 2.0, 3.0, 4.0},
+				XValues: x,
+				YValues: y,
 			},
 		},
 	}

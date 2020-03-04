@@ -72,6 +72,28 @@ function sortMatchTableBy(e) {
   xhttp.send();
 }
 
+//Shows graph based on settings inputted on the page
+function showGraph() {
+  var xhttp = new XMLHttpRequest();
+  var select = document.getElementById("graphselect");
+  var selection = encodeURIComponent(select.options[select.selectedIndex].value);
+  var urlParams = new URLSearchParams(window.location.search);
+  var profileTeam = urlParams.get("team");
+  var url = "/getGraph?subject="+selection+"&team="+profileTeam;
+  xhttp.open("GET", url, true);
+  xhttp.responseType = "arraybuffer";
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 & this.status == 200) {
+      var arr = new Uint8Array(this.response);
+      var rawstr = String.fromCharCode.apply(null, arr);
+      var b64=btoa(rawstr);
+      dataurl = "data:image/jpeg;base64,"+b64;
+      document.getElementById("graph").src = dataurl;
+    }
+  }
+  xhttp.send();
+}
+
 function gotoTeamProfile(team) {
   window.location = "/data?display=teamprofile&team="+String(team);
 }
