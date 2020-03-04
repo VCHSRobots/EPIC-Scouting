@@ -34,9 +34,6 @@ var dbUsers *sql.DB
 var dbTeams *sql.DB
 var dbCampaigns *sql.DB
 
-type MatchData struct {
-}
-
 /*
 Schedule describes the current Campaign / Event / Match a team is contributing to.
 */
@@ -878,6 +875,13 @@ func GetDatabaseSize() map[string]int64 {
 		results[base] = size
 	}
 	return results
+}
+
+/*
+SysAdminList returns a list of sysadmins as userIDs.
+*/
+func SysAdminList() {
+	dbUsers.Exec("SELECT * from sysadmins")
 }
 
 /*

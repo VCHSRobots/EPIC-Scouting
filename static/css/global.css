@@ -27,7 +27,9 @@ label {
 }
 
 .code {
-    font-family: verdana;
+    background-color: #bcbfc0;
+    font-family: monospace;
+    font-style: normal;
 }
 
 .warning {

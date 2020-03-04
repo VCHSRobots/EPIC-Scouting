@@ -1,6 +1,4 @@
 {{template "header" .HeaderData}}
-{{/* TODO: Use one scouting route. Contents change whether mode is "match" or "pit". */}}
-
 {{if .MatchScout}}
 <h1 id="test">Enter match data now!</h1>
 <form>
@@ -108,7 +106,6 @@
 </form>
 <canvas id="qr"></canvas>
 {{end}}
-
 {{if .PitScout}}
 <p>Enter pit data now!</p>
 <form>
@@ -126,13 +123,11 @@
 </form>
 <canvas id="qr"></canvas>
 {{end}}
-
 {{if .nope}}
-<p>This is not the page you're looking for</p><br>
+<p>Who touched my querystring?!</p><br>
 <a href="/scout?type=match">Match Scouting</a>
 <a href="/scout?type=pit">Pit Scouting</a>
 {{end}}
-
 <script src="js/qrious.js"></script>
 <script src="js/papaparse.js"></script>
 <script src="js/qr.js"></script>

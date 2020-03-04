@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//MatchData struct for recieving json data for matches
+//MatchData struct for receiving json data for matches
 type MatchData struct {
 	Data [][]string `json:"data"`
 }

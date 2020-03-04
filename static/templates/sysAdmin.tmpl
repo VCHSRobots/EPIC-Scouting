@@ -1,15 +1,12 @@
 {{template "header" .HeaderData}}
 <img src="/media/construction.gif"></img>
 <h1>SUPER SECRET SYSADMIN BUNKER</h1>
-<img src="/media/root.png"></img>
+<img src="/media/root.png" class="centerimg" style="max-width: 15%"></img>
 <p>Current database sizes: <ul>{{range .DatabaseSizes}}<li>{{.}}</li>{{end}}</ul></p>
 <br>
-<form action="/makesysadmin" method="post">
-<input type="text" name="make_sysadmin">
-<input type="submit" value="Give Sysadmin">
+<form action="/toggleSysAdmin" method="post">
+<input type="text" name="toggleSysAdmin">
+<input type="submit" value="Toggle SysAdmin status.">
 </form>
-<form action="/downgradesysadmin" method="post">
-<input type="text" name="downgrade_sysadmin">
-<input type="submit" value="Downgrade Sysadmin">
-</form>
+<p>List of SysAdmins: <ul>{{range .SysAdmins}}<li>{{.}}</li>{{end}}</ul></p>
 {{template "footer"}}
