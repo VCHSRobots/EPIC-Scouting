@@ -87,17 +87,18 @@ func MatchDataGet(c *gin.Context) {
 	campaign, _ := db.GetTeamCampaign(userTeamID)
 	matchIDs := db.ListMatchIDs(campaign)
 	for _, matchID := range matchIDs {
-		matchResult = calc.DeriveMatchData(matchID)
+		matchResult, _ = calc.GetMatchData(matchID)
 		matchResults = append(matchResults, matchResult)
 	}
 	for ind, result := range matchResults {
-		csvList = []string{strconv.Itoa(result.MatchNum), fmt.Sprint(result.RedParticipants), fmt.Sprint(result.BlueParticipants), strconv.Itoa(result.RedAutoBalls + result.RedTeleopShots), strconv.Itoa(result.BlueAutoBalls + result.BlueTeleopShots), strconv.Itoa(result.RedShieldStage), strconv.Itoa(result.RedShieldStage), fmt.Sprint(result.RedRankingPoints), fmt.Sprint(result.BlueRankingPoints), strconv.Itoa(result.RedPoints), strconv.Itoa(result.BluePoints), result.Winner}
+		csvList = []string{strconv.Itoa(result.MatchNum), fmt.Sprint(result.RedParticipants), fmt.Sprint(result.BlueParticipants), strconv.Itoa(result.RedAutoBalls + result.RedTeleopShots), strconv.Itoa(result.BlueAutoBalls + result.BlueTeleopShots), strconv.Itoa(result.RedShieldStage), strconv.Itoa(result.BlueShieldStage), fmt.Sprint(result.RedClimbStatus), fmt.Sprint(result.BlueClimbStatus), fmt.Sprint(result.RedRankingPoints), fmt.Sprint(result.BlueRankingPoints), strconv.Itoa(result.RedPoints), strconv.Itoa(result.BluePoints), result.Winner}
 		build.WriteString(writeCSVString(csvList))
 		if ind != len(matchResults)-1 {
 			build.WriteString("\n")
 		}
 	}
 	csvString = build.String()
+	fmt.Println(csvString)
 	c.String(http.StatusOK, "text", csvString)
 }
 

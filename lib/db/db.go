@@ -413,7 +413,6 @@ func StoreMatch(arr []string, agentid, teamid string) error {
 	}
 	scoutid := uuid.New().String()
 	result, errExec := dbTeams.Exec(fmt.Sprintf("INSERT INTO results VALUES ( '%s', '%s', '%s', '%s', '%s', '%s', '%v', '%s', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%v', '%s' )", scoutid, campaignid, eventid, data.MatchID, agentid, competitorid, data.MatchNum, data.Alliance, data.AutoLineCross, data.AutoLowBalls, data.AutoHighBalls, data.AutoBackBalls, data.AutoShots, data.AutoPickups, data.ShotQuantity, data.LowFuel, data.HighFuel, data.BackFuel, data.StageOneComplete, data.StageOneTime, data.StageTwoComplete, data.StageTwoTime, data.Fouls, data.TechFouls, data.Card, data.Climbed, data.Balanced, data.ClimbTime, escapeText(data.Comments)))
-	fmt.Println(result, errExec)
 	if errExec != nil {
 		log.Errorf("Unable to write match scouting data to database: %s", errExec)
 		return errExec
@@ -569,7 +568,6 @@ func GetTeamMatches(teamNum int, campaignid string) (*[]MatchData, error) {
 	data := make([]MatchData, 0)
 	competitorID := GetCompetitorID(teamNum)
 	event, _ := GetActiveCampaignEvent(campaignid)
-	fmt.Println(event, teamNum, competitorID)
 	rows, err := dbTeams.Query(fmt.Sprintf("SELECT matchnumber, matchid, autoLineCross, autoLowBalls, autoHighBalls, autoBackBalls, autoPickups, shotQuantity, lowFuel, highFuel, backFuel, stageOneComplete, stageOneTime, stageTwoComplete, stageTwoTime, fouls, techFouls, card, climbed, balanced, climbtime, comments FROM results WHERE competitorid='%s' AND eventid='%s'", competitorID, event))
 	defer rows.Close()
 	for rows.Next() {
@@ -708,7 +706,7 @@ func GetAllianceParticipants(matchID, alliance string) []int {
 	var teamID string
 	var teamNum int
 	allies := make([]int, 0)
-	rows, _ := dbTeams.Query(fmt.Sprintf("SELECT teamid FROM results WHERE matchid='%s' AND alliance='%s'", matchID, alliance))
+	rows, _ := dbTeams.Query(fmt.Sprintf("SELECT competitorid FROM results WHERE matchid='%s' AND alliance='%s'", matchID, alliance))
 	defer rows.Close()
 	for rows.Next() {
 		rows.Scan(&teamID)

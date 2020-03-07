@@ -55,9 +55,9 @@ function sortMatchTableBy(e) {
   xhttp.responseType = "text";
   xhttp.onreadystatechange = function() {
     if (xhttp.readyState == 4 && xhttp.status == 200) {
-      var txt = this.responseText.slice(20, -2);
+      var txt = this.responseText.slice(20, -1);
       var rows = Papa.parse(txt).data;
-      var table = document.getElementById("teamdata");
+      var table = document.getElementById("matchdata");
       for (row in rows) {
         tablerow = table.insertRow();
         for (celldata in rows[row]) {
