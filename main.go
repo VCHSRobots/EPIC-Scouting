@@ -90,6 +90,7 @@ func start(port int) {
 	router.GET("/scout", routes.Scout)
 	router.POST("/matchPOST", routes.MatchPOST)
 	router.GET("/sysadmin", routes.SysAdmin)
+	router.POST("/toggleSysAdmin", routes.SysAdminToggle)
 	router.GET("/teamJoin", routes.TeamJoin)
 	router.GET("/teamCreate", routes.TeamCreate)
 	router.GET("/teamData", routes.TeamData)

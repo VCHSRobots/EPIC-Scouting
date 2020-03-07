@@ -196,20 +196,20 @@ func TouchBase(databasePath string) {
 
 	//Reusing indicator for whether database was just made after all databases are written
 	//TODO these are for testing
-		if errQuery != nil {
-			var teamID, campaignID, eventID, matchID string
-			TeamCreate(4415, "epic robotz", "epicevent")
-			dbTeams.QueryRow("SELECT teamid FROM teams").Scan(&teamID)
-			fmt.Println("Team ID:", teamID)
-			CampaignCreate(teamID, "00000000-0000-0000-0000-000000000000", "test")
-			dbCampaigns.QueryRow("SELECT campaignid FROM campaigns WHERE owner='00000000-0000-0000-0000-000000000000'").Scan(&campaignID)
-			CreateEvent(campaignID, "00000000-0000-0000-0000-000000000000", "event", "nowhere", 0, 900000000000)
-			dbCampaigns.QueryRow("SELECT eventid FROM events").Scan(&eventID)
-			CreateMatch(eventID, "00000000-0000-0000-0000-000000000000", 1, true)
-			dbCampaigns.QueryRow("SELECT matchid FROM matches").Scan(&matchID)
-			fmt.Println("Match ID:", matchID)
-			dbTeams.Exec(fmt.Sprintf("UPDATE teams SET schedule='%s' WHERE teamid='%s'", campaignID, teamID))
-		}
+	if errQuery != nil {
+		var teamID, campaignID, eventID, matchID string
+		TeamCreate(4415, "epic robotz", "nothing")
+		dbTeams.QueryRow("SELECT teamid FROM teams").Scan(&teamID)
+		fmt.Println("Team ID:", teamID)
+		CampaignCreate(teamID, "00000000-0000-0000-0000-000000000000", "test")
+		dbCampaigns.QueryRow("SELECT campaignid FROM campaigns WHERE owner='00000000-0000-0000-0000-000000000000'").Scan(&campaignID)
+		CreateEvent(campaignID, "00000000-0000-0000-0000-000000000000", "event", "nowhere", 0, 900000000000)
+		dbCampaigns.QueryRow("SELECT eventid FROM events").Scan(&eventID)
+		CreateMatch(eventID, "00000000-0000-0000-0000-000000000000", 1, true)
+		dbCampaigns.QueryRow("SELECT matchid FROM matches").Scan(&matchID)
+		fmt.Println("Match ID:", matchID)
+		dbTeams.Exec(fmt.Sprintf("UPDATE teams SET schedule='%s' WHERE teamid='%s'", campaignID, teamID))
+	}
 }
 
 /*
@@ -249,6 +249,22 @@ func TeamList() (teams []string) {
 		accessCheck(err)
 	}
 	return teams
+}
+
+/*
+TeamListFull returns teamID, teamNumber, teamName, and schedule for every team.
+*/
+func TeamListFull() map[string][]string {
+	rows, err := dbTeams.Query("SELECT teamid, number, name, schedule from teams")
+	defer rows.Close()
+	accessCheck(err)
+	results := make(map[string][]string)
+	var id, number, name, schedule string
+	for rows.Next() {
+		rows.Scan(&id, &number, &name, &schedule)
+		results[id] = append(results[id], number, name, schedule)
+	}
+	return results
 }
 
 /*
@@ -359,6 +375,23 @@ func UserQuery(userID string) (*UserData, error) {
 		d.SysAdmin = true
 	}
 	return &d, nil
+}
+
+/*
+UserList returns a list of users as userid and username.
+*/
+func UserList() map[string]string {
+	rows, err := dbUsers.Query("SELECT userid, username FROM users")
+	accessCheck(err)
+	defer rows.Close()
+	results := make(map[string]string)
+	var id string
+	var uname string
+	for rows.Next() {
+		rows.Scan(&id, &uname)
+		results[id] = uname
+	}
+	return results
 }
 
 /*
@@ -808,6 +841,22 @@ func CampaignClone(agentID, clonedID, teamID string) {
 }
 
 /*
+CampaignList returns list of campaigns as id: owner, name
+*/
+func CampaignList() map[string][]string {
+	rows, err := dbCampaigns.Query("SELECT campaignid, owner, name FROM campaigns")
+	defer rows.Close()
+	accessCheck(err)
+	results := make(map[string][]string)
+	var id, owner, name string
+	for rows.Next() {
+		rows.Scan(&id, &owner, &name)
+		results[id] = append(results[id], owner, name)
+	}
+	return results
+}
+
+/*
 CreateEvent adds an event to the event table in the campaigns database
 Its starttime and endtime should be Unix time integers of its start and end dates
 */
@@ -909,10 +958,21 @@ func GetDatabaseSize() map[string]int64 {
 }
 
 /*
-SysAdminList returns a list of sysadmins as userIDs.
+SysAdminList returns a list of sysadmins as userIDs and usernames.
 */
-func SysAdminList() {
-	dbUsers.Exec("SELECT * from sysadmins")
+func SysAdminList() map[string]string {
+	rows, err := dbUsers.Query("SELECT * from sysadmins")
+	accessCheck(err)
+	defer rows.Close()
+	var id string
+	sysAdmins := make(map[string]string)
+	for rows.Next() {
+		rows.Scan(&id)
+		d, err := UserQuery(id)
+		accessCheck(err)
+		sysAdmins[id] = d.UserName
+	}
+	return sysAdmins
 }
 
 /*
