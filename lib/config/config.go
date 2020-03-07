@@ -48,7 +48,7 @@ BuildInformation returns the build name and date.
 */
 func BuildInformation() (buildName, buildDate string) {
 	buildName = "Prerelease 0.1" // TODO: Update this with each release. "Prerelease" for development versions, "Release" for production versions.
-	buildDate = "2020.031.1"     // TODO: Update this with each release. External script updates number and it is sourced from an external file. Format: YYYY.DDD.N
+	buildDate = "2020.064.2"     // TODO: Update this with each release. External script updates number and it is sourced from an external file. Format: YYYY.DDD.N
 	return
 }
 

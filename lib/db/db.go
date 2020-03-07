@@ -195,20 +195,20 @@ func TouchBase(databasePath string) {
 
 	//Reusing indicator for whether database was just made after all databases are written
 	//TODO these are for testing
-	if errQuery != nil {
-		var teamID, campaignID, eventID, matchID string
-		TeamCreate(4415, "epic robotz", "epicevent")
-		dbTeams.QueryRow("SELECT teamid FROM teams").Scan(&teamID)
-		fmt.Println("Team ID:", teamID)
-		CampaignCreate(teamID, "00000000-0000-0000-0000-000000000000", "test")
-		dbCampaigns.QueryRow("SELECT campaignid FROM campaigns WHERE owner='00000000-0000-0000-0000-000000000000'").Scan(&campaignID)
-		CreateEvent(campaignID, "00000000-0000-0000-0000-000000000000", "event", "nowhere", 0, 900000000000)
-		dbCampaigns.QueryRow("SELECT eventid FROM events").Scan(&eventID)
-		CreateMatch(eventID, "00000000-0000-0000-0000-000000000000", 1, true)
-		dbCampaigns.QueryRow("SELECT matchid FROM matches").Scan(&matchID)
-		fmt.Println("Match ID:", matchID)
-		dbTeams.Exec(fmt.Sprintf("UPDATE teams SET schedule='%s' WHERE teamid='%s'", campaignID, teamID))
-	}
+		if errQuery != nil {
+			var teamID, campaignID, eventID, matchID string
+			TeamCreate(4415, "epic robotz", "epicevent")
+			dbTeams.QueryRow("SELECT teamid FROM teams").Scan(&teamID)
+			fmt.Println("Team ID:", teamID)
+			CampaignCreate(teamID, "00000000-0000-0000-0000-000000000000", "test")
+			dbCampaigns.QueryRow("SELECT campaignid FROM campaigns WHERE owner='00000000-0000-0000-0000-000000000000'").Scan(&campaignID)
+			CreateEvent(campaignID, "00000000-0000-0000-0000-000000000000", "event", "nowhere", 0, 900000000000)
+			dbCampaigns.QueryRow("SELECT eventid FROM events").Scan(&eventID)
+			CreateMatch(eventID, "00000000-0000-0000-0000-000000000000", 1, true)
+			dbCampaigns.QueryRow("SELECT matchid FROM matches").Scan(&matchID)
+			fmt.Println("Match ID:", matchID)
+			dbTeams.Exec(fmt.Sprintf("UPDATE teams SET schedule='%s' WHERE teamid='%s'", campaignID, teamID))
+		}
 }
 
 /*
