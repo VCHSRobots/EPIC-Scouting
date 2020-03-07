@@ -10,17 +10,26 @@
 {{if .MatchData}}
 <h1>Match Data</h1>
 <select id="datasort" onChange="sortMatchTableBy('datasort')">
-<option value="Match #">Team</option>
-<option value="Red Score" selected="selected">Overall</option>
-<option value="Blue Score">Auto</option>
-<option value="Auto Points">Shooting</option>
-<option value="Shooting Points">Color Wheel</option>
-<option value="Color Wheel Points">Fouls</option>
+<option value="Match #">Match #</option>
+<option value="Red Score" selected="selected">Red Score</option>
+<option value="Blue Score">Blue Score</option>
+<option value="Auto Points">Auto Points</option>
+<option value="Shooting Points">Shooting Points</option>
+<option value="Color Wheel Points">Color Wheel Points</option>
 </select>
 <table id="matchdata">
     <tr>
         <th>Match #</th>
-        <th>Teams</th>
+        <th>Red Teams</th>
+        <th>Blue Teams</th>
+        <th>Red Fuel</th>
+        <th>Blue Fuel</th>
+        <th>Red Shield</th>
+        <th>Blue Shield</th>
+        <th>Red Climbs</th>
+        <th>Blue Climbs</th>
+        <th>Red RP</th>
+        <th>Blue RP</th>
         <th>Red Score</th>
         <th>Blue Score</th>
         <th>Winner</th>
@@ -48,7 +57,6 @@
         <th>Fouls</th>
     </tr>
 </table>
-<script src="js/loaddata.js"></script>
 {{end}}
 {{if .TeamProfile}}
 <h1>Team Profile<h1>
@@ -105,4 +113,5 @@
 <h2>Match Comments</h2>
 <p id="matchcomments">{{.Comments}}</p>
 {{end}}
+<script src="js/loaddata.js"></script>
 {{template "footer"}}

@@ -41,7 +41,7 @@ func MatchPOST(c *gin.Context) {
 	//original team id do not steal
 	//testTeamID := "4415epicrobotz"
 	//Put testing team and match ids here from inital print
-	testTeamID := "7df56807-06e7-4eb2-990a-37adb8561efe"
+	testTeamID := "d17f6f55-f04e-4567-bb1f-5e9db66681ee"
 	if userID != "" {
 		db.StoreMatch(data.Data[0], userID, testTeamID)
 	} else {

@@ -4,7 +4,6 @@ Package calc provides functions for calculating various game statistics.
 package calc
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -16,41 +15,38 @@ import (
 MatchResults summary of match results. A culmination of all data on a given match
 */
 type MatchResults struct {
-	RedParticipants              []int
-	BlueParticipants             []int
-	RedPoints                    int
-	BluePoints                   int
-	Winner                       string
-	RedRankingPoints             int
-	BlueRankingPoints            int
-	RedAutoLineCrosses           int
-	BlueAutoLineCrosses          int
-	RedAutoPoints                int
-	BlueAutoPoints               int
-	RedAutoBalls                 int
-	BlueAutoBalls                int
-	RedShootingPoints            int
-	BlueShootingPoints           int
-	RedTeleopShots               int
-	BlueTeleopShots              int
-	RedLowShots                  int
-	BlueLowShots                 int
-	RedHighShots                 int
-	BlueHighShots                int
-	RedBackShots                 int
-	BlueBackShots                int
-	RedShieldStage               int
-	BlueShieldStage              int
-	RedColorWheelStageTwoTime    int
-	BlueColorWheelStageTwoTime   int
-	RedColorWheelStageThreeTime  int
-	BlueColorWheelStageThreeTime int
-	RedClimbStatus               []int
-	BlueClimbStatus              []int
-	RedBalanced                  bool
-	BlueBalanced                 bool
-	RedClimbPoints               int
-	BlueClimbPoints              int
+	MatchNum            int
+	RedParticipants     []int
+	BlueParticipants    []int
+	RedPoints           int
+	BluePoints          int
+	Winner              string
+	RedRankingPoints    int
+	BlueRankingPoints   int
+	RedAutoLineCrosses  int
+	BlueAutoLineCrosses int
+	RedAutoPoints       int
+	BlueAutoPoints      int
+	RedAutoBalls        int
+	BlueAutoBalls       int
+	RedShootingPoints   int
+	BlueShootingPoints  int
+	RedTeleopShots      int
+	BlueTeleopShots     int
+	RedLowShots         int
+	BlueLowShots        int
+	RedHighShots        int
+	BlueHighShots       int
+	RedBackShots        int
+	BlueBackShots       int
+	RedShieldStage      int
+	BlueShieldStage     int
+	RedClimbStatus      []int
+	BlueClimbStatus     []int
+	RedBalanced         bool
+	BlueBalanced        bool
+	RedClimbPoints      int
+	BlueClimbPoints     int
 }
 
 /*
@@ -72,6 +68,10 @@ func GetTeamScores(campaignid string) [][]int {
 	}
 	return scores
 }
+
+/*
+TODO these should be match summary functions
+*/
 
 /*
 GetMatchData gets a summary of match scores for the red and blue alliances respectively
@@ -97,9 +97,12 @@ func GetMatchData(matchid string) (MatchResults, error) {
 func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 	var summary MatchResults
 	var count, redPoints, bluePoints, redRP, blueRP int
-	if len(red) == 0 || len(blue) == 0 {
-		return summary, errors.New("Unable to summarize match: no data provided for one or more alliances")
-	}
+	//TODO this is only commented for testing
+	// if len(red) == 0 || len(blue) == 0 {
+	// 	return summary, errors.New("Unable to summarize match: no data provided for one or more alliances")
+	// }
+	fmt.Println(red, blue)
+	summary.MatchNum = red[0].MatchNum
 	participants := db.GetMatchParticipants(red[0].MatchID)
 	summary.RedParticipants = participants[0]
 	summary.BlueParticipants = participants[1]
@@ -214,39 +217,20 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 		summary.RedShieldStage = 1
 		redPoints += 10 //???
 	}
-	if blue[0].StageOneComplete {
-		if blue[0].StageTwoComplete {
-			summary.BlueShieldStage = 3
-			bluePoints += 50
-			blueRP++
-		} else {
-			summary.BlueShieldStage = 2
-			bluePoints += 30
-		}
-	} else if summary.RedAutoBalls+summary.RedTeleopShots >= 20 {
-		summary.BlueShieldStage = 1
-		bluePoints += 10 //???
-	}
-	for _, teamdata := range red {
-		if teamdata.StageOneTime != 0 {
-			summary.RedColorWheelStageTwoTime = teamdata.StageOneTime
-		}
-	}
-	for _, teamdata := range blue {
-		if teamdata.StageOneTime != 0 {
-			summary.BlueColorWheelStageTwoTime = teamdata.StageOneTime
-		}
-	}
-	for _, teamdata := range red {
-		if teamdata.StageOneTime != 0 {
-			summary.RedColorWheelStageThreeTime = teamdata.StageTwoTime
-		}
-	}
-	for _, teamdata := range blue {
-		if teamdata.StageOneTime != 0 {
-			summary.BlueColorWheelStageThreeTime = teamdata.StageTwoTime
-		}
-	}
+	//TODO uncomment below
+	// if blue[0].StageOneComplete {
+	// 	if blue[0].StageTwoComplete {
+	// 		summary.BlueShieldStage = 3
+	// 		bluePoints += 50
+	// 		blueRP++
+	// 	} else {
+	// 		summary.BlueShieldStage = 2
+	// 		bluePoints += 30
+	// 	}
+	// } else if summary.BlueAutoBalls+summary.BlueTeleopShots >= 20 {
+	// 	summary.BlueShieldStage = 1
+	// 	bluePoints += 10 //???
+	// }
 	for _, teamdata := range red {
 		if teamdata.Climbed == "climbed" {
 			summary.RedClimbStatus = append(summary.RedClimbStatus, 2)
@@ -280,10 +264,11 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 			summary.BlueClimbStatus = append(summary.RedClimbStatus, 0)
 		}
 	}
-	if blue[0].Balanced {
-		summary.BlueBalanced = true
-		count += 15
-	}
+	//TODO uncomment below
+	// if blue[0].Balanced {
+	// 	summary.BlueBalanced = true
+	// 	count += 15
+	// }
 	//award climbing ranking point if condition met
 	if count >= 60 {
 		blueRP++
@@ -734,17 +719,29 @@ func FoulBreakdown(matches []db.MatchData) []int {
 Match Summary functions use the scouter data on matches to summarize their results
 */
 
-/*
-DeriveMatchData pulls all data from a match into a summary of that match
-*/
-func DeriveMatchData(matchID string) MatchResults {
-	var results MatchResults
-	//matchResults = match.MatchResults(matchID)
-	return results
-}
-
 /*Match Census Functions determine the weight of contradictary data on the same match and return a score useable for the system*/
 //Below are differing census methods. They may or may not be used.
+
+/*
+ResolveMatchList resolves a list of scouter data on various matches into their resolved versions
+*/
+func ResolveMatchList(matches []db.MatchData) []db.MatchData {
+	resolved := make([]db.MatchData, 0)
+	numberedMatches := make(map[int][]db.MatchData)
+	for _, data := range matches {
+		_, ok := numberedMatches[data.MatchNum]
+		if ok {
+			numberedMatches[data.MatchNum] = append(numberedMatches[data.MatchNum], data)
+		} else {
+			numberedMatches[data.MatchNum] = make([]db.MatchData, 1)
+			numberedMatches[data.MatchNum][0] = data
+		}
+	}
+	for _, data := range numberedMatches {
+		resolved = append(resolved, ResolveDataConflicts(data))
+	}
+	return resolved
+}
 
 /*
 ResolveMatchConflicts takes multiple scouter's data that may contradict and combines it, eliminating outliers
@@ -761,6 +758,9 @@ ResolveDataConflicts resolves discrepencies between scouting data
 */
 func ResolveDataConflicts(data []db.MatchData) db.MatchData {
 	var resolved db.MatchData
+	if len(data) == 0 {
+		return resolved
+	}
 	autoLowBallsList := make([]int, len(data))
 	autoHighBallsList := make([]int, len(data))
 	autoBackBallsList := make([]int, len(data))
@@ -823,6 +823,8 @@ func ResolveDataConflicts(data []db.MatchData) db.MatchData {
 	resolved.Balanced = resolveBool(balancedList)
 	resolved.Card = resolveString(cardList)
 	resolved.Climbed = resolveString(climbedList)
+	resolved.Team = data[0].Team
+	resolved.MatchID = data[0].MatchID
 	return resolved
 }
 
@@ -893,7 +895,6 @@ func resolveString(arr []string) string {
 		occuranceCount[val]++
 	}
 	for key, val := range occuranceCount {
-		fmt.Println(key, val, maxCount, resolved)
 		if val > maxCount {
 			maxCount = val
 			resolved = key

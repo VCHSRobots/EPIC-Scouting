@@ -70,7 +70,6 @@ func TeamDataGet(c *gin.Context) {
 		}
 	}
 	csvString := build.String()
-	MatchDataGet(c)
 	c.String(http.StatusOK, "text", csvString)
 }
 
@@ -78,12 +77,29 @@ func TeamDataGet(c *gin.Context) {
 MatchDataGet gets list of match data to display on match data page
 */
 func MatchDataGet(c *gin.Context) {
-	//var builder strings.Builder
-	//team, _ := strconv.Atoi(c.Query("team"))
+	var build strings.Builder
+	var csvList []string
+	var csvString string
+	var matchResult calc.MatchResults
+	matchResults := make([]calc.MatchResults, 0)
 	userTeam, _ := strconv.Atoi(auth.CheckTeam(c))
 	userTeamID, _ := db.GetTeamID(userTeam)
 	campaign, _ := db.GetTeamCampaign(userTeamID)
-	fmt.Println(campaign)
+	matchIDs := db.ListMatchIDs(campaign)
+	for _, matchID := range matchIDs {
+		matchResult, _ = calc.GetMatchData(matchID)
+		matchResults = append(matchResults, matchResult)
+	}
+	for ind, result := range matchResults {
+		csvList = []string{strconv.Itoa(result.MatchNum), fmt.Sprint(result.RedParticipants), fmt.Sprint(result.BlueParticipants), strconv.Itoa(result.RedAutoBalls + result.RedTeleopShots), strconv.Itoa(result.BlueAutoBalls + result.BlueTeleopShots), strconv.Itoa(result.RedShieldStage), strconv.Itoa(result.BlueShieldStage), fmt.Sprint(result.RedClimbStatus), fmt.Sprint(result.BlueClimbStatus), fmt.Sprint(result.RedRankingPoints), fmt.Sprint(result.BlueRankingPoints), strconv.Itoa(result.RedPoints), strconv.Itoa(result.BluePoints), result.Winner}
+		build.WriteString(writeCSVString(csvList))
+		if ind != len(matchResults)-1 {
+			build.WriteString("\n")
+		}
+	}
+	csvString = build.String()
+	fmt.Println(csvString)
+	c.String(http.StatusOK, "text", csvString)
 }
 
 func contains(arr []string, val string) bool {
@@ -109,6 +125,17 @@ func writeCSV(arr []int) string {
 	for ind, val := range arr {
 		strval := strconv.Itoa(val)
 		str.WriteString(strval)
+		if ind != len(arr)-1 {
+			str.WriteString(",")
+		}
+	}
+	return str.String()
+}
+
+func writeCSVString(arr []string) string {
+	var str strings.Builder
+	for ind, val := range arr {
+		str.WriteString(val)
 		if ind != len(arr)-1 {
 			str.WriteString(",")
 		}

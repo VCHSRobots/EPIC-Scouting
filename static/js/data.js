@@ -2,21 +2,19 @@
 data.js manages tables on the match data display page
 */
 
-const urlParams = new URLSearchParams(window.location.search);
-
 //loads match data onto the data page using ajax
 function loadData() {
-  clearTable();
+  var urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("display")=="team") {
     sortTeamTableBy("datasort");
   } else if (urlParams.get("display")=="match") {
-    sortMatchTableBy("datasort")
-  } 
+    sortMatchTableBy("datasort");
+  }
 }
 
-function clearTable() {
-  while (document.getElementById("teamdata").rows.length > 1) {
-    document.getElementById("teamdata").deleteRow(1);
+function clearTable(team) {
+  while (document.getElementById(team).rows.length > 1) {
+    document.getElementById(team).deleteRow(1);
   }
 }
 
@@ -25,7 +23,7 @@ function clearTable() {
 function sortTeamTableBy(e) {
   var selector = document.getElementById(e);
   var row = selector.options[selector.selectedIndex].value;
-  clearTable();
+  clearTable("teamdata");
   var xhttp = new XMLHttpRequest();
   xhttp.responseType = "text";
   xhttp.onreadystatechange = function() {
@@ -48,16 +46,18 @@ function sortTeamTableBy(e) {
 }
 
 function sortMatchTableBy(e) {
+  var urlParams = new URLSearchParams(window.location.search);
   var selector = document.getElementById(e);
-  var row = selector.options[selector.selectedIndex].value;
-  clearTable();
+  var selected = encodeURIComponent(selector.options[selector.selectedIndex].value);
+  var team = encodeURIComponent(urlParams.get("team"));
+  clearTable("matchdata");
   var xhttp = new XMLHttpRequest();
   xhttp.responseType = "text";
   xhttp.onreadystatechange = function() {
     if (xhttp.readyState == 4 && xhttp.status == 200) {
-      var txt = this.responseText.slice(20, -2);
+      var txt = this.responseText.slice(20, -1);
       var rows = Papa.parse(txt).data;
-      var table = document.getElementById("teamdata");
+      var table = document.getElementById("matchdata");
       for (row in rows) {
         tablerow = table.insertRow();
         for (celldata in rows[row]) {
@@ -68,7 +68,7 @@ function sortMatchTableBy(e) {
       }
     }
   }
-  xhttp.open("GET", "/matchDataGet?sortby="+row);
+  xhttp.open("GET", "/matchDataGet?sortby="+selected+"&team="+team);
   xhttp.send();
 }
 
