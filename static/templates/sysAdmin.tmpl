@@ -1,7 +1,6 @@
 {{template "header" .HeaderData}}
 <img src="/media/construction.gif"></img>
 <h1>SUPER SECRET SYSADMIN BUNKER</h1>
-<img src="/media/root.png" class="centerimg" style="max-width: 15%"></img>
 <p>Current database sizes: <ul>{{range .DatabaseSizes}}<li>{{.}}</li>{{end}}</ul></p>
 <br>
 <form action="/toggleSysAdmin" method="post">
@@ -9,4 +8,7 @@
 <input type="submit" value="Toggle SysAdmin status.">
 </form>
 <p>List of SysAdmins: <ul>{{range .SysAdmins}}<li>{{.}}</li>{{end}}</ul></p>
+<p>List of Users: <ul>{{range .Users}}<li>{{.}}</li>{{end}}</ul></p>
+<p>List of Campaigns: <ul>{{range .Campaigns}}<li>{{.}}</li>{{end}}</ul></p>
+<p>List of Teams: <ul>{{range .Teams}}<li>{{.}}</li>{{end}}</ul></p>
 {{template "footer"}}
