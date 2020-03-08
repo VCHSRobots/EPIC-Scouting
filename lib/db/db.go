@@ -180,8 +180,8 @@ func TouchBase(databasePath string) {
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS members ( userid TEXT, teamid TEXT NOT NULL, usertype TEXT NOT NULL )")                                             // The members on a team. UserType is either member or admin.
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS requestMembers ( userid TEXT, teamid TEXT NOT NULL )")                                                              // Membership requests for teams
 	dbTeams.Exec("CREATE TABLE IF NOT EXISTS participating ( teamid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, schedule TEXT )")                          // What events a team is participating in. If a team is currently running a campaign, they must have *some* event they are participating in. A team is scouting all matches during an event, of course.
-	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( scoutid TEXT PRIMARY KEY, campaignid TEXT NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, userid TEXT NOT NULL, competitorid TEXT NOT NULL, matchnumber INTEGER NOT NULL, alliance STRING, autoLineCross BIT, autoLowBalls INTEGER, autoHighBalls INTEGER, autoBackBalls INTEGER, autoShots, autoPickups INTEGER, shotQuantity INTEGER, lowFuel INTEGER, highFuel INTEGER, backFuel INTEGER, stageOneComplete BIT, stageOneTime INTEGER, stageTwoComplete BIT, stageTwoTime INTEGER, fouls INTEGER, techFouls INTEGER, card TEXT, climbed TEXT, balanced BIT, climbtime INTEGER, comments TEXT )")
-	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( campaignid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, competitorid TEXT NOT NULL, teamid TEXT NOT NULL, userid TEXT NOT NULL, datetime TEXT NOT NULL )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
+
+	dbTeams.Exec("CREATE TABLE IF NOT EXISTS results ( scoutid TEXT PRIMARY KEY, campaignid TEXT NOT NULL, eventid TEXT NOT NULL, matchid TEXT NOT NULL, userid TEXT NOT NULL, competitorid TEXT NOT NULL, matchnumber INTEGER NOT NULL, alliance STRING, autoLineCross BIT, autoLowBalls INTEGER, autoHighBalls INTEGER, autoBackBalls INTEGER, autoShots, autoPickups INTEGER, shotQuantity INTEGER, lowFuel INTEGER, highFuel INTEGER, backFuel INTEGER, stageOneComplete BIT, stageOneTime INTEGER, stageTwoComplete BIT, stageTwoTime INTEGER, fouls INTEGER, techFouls INTEGER, card TEXT, climbed TEXT, balanced BIT, climbtime INTEGER, comments TEXT )") // A team's scouted results. Any number of teams may scout for the same campaign / event / match at the same time.
 
 	// Create a default SysAdmin team if it does not exist.
 
@@ -189,25 +189,23 @@ func TouchBase(databasePath string) {
 	dbCampaigns = newDatabase("campaigns")
 	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS campaigns ( campaignid TEXT PRIMARY KEY UNIQUE NOT NULL, owner TEXT NOT NULL, name TEXT NOT NULL )")                                            // TODO: Add more information about each campaign. Campaign owner is a teamid. If campaign owner is all zeros, campaign is global.
 	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS events ( eventid TEXT PRIMARY KEY NOT NULL, campaignid TEXT NOT NULL, name TEXT NOT NULL, location TEXT, starttime INTEGER, endtime INTEGER )") // TODO: Add more information about each event.
-	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS matches ( eventid TEXT PRIMARY KEY NOT NULL, matchid TEXT UNIQUE NOT NULL, matchnumber INTEGER NOT NULL, active BIT )")                         // TODO: Add more information about each match.
-	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS pitscout ( eventid TEXT PRIMARY KEY NOT NULL, matchid TEXT UNIQUE NOT NULL, matchnumber INTEGER NOT NULL, starttime TEXT, endtime TEXT )")
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS matches ( matchid TEXT PRIMARY KEY NOT NULL, eventid TEXT NOT NULL, matchnumber INTEGER NOT NULL, active BIT )")                                // TODO: Add more information about each match.
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS pitscout ( pitscoutid TEXT PRIMARY KEY NOT NULL, competitorid TEXT NOT NULL, campaignid TEXT NOT NULL, teamname TEXT, cycletime INTEGER NOT NULL, comments TEXT )")
+	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS images ( imageid TEXT PRIMARY KEY, campaignid TEXT NOT NULL, competitorid TEXT NOT NULL, image TEXT NOT NULL )")
 	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS participants ( matchid TEXT PRIMARY KEY NOT NULL, competitorid TEXT UNIQUE NOT NULL) ")             // The participants in each match.
 	dbCampaigns.Exec("CREATE TABLE IF NOT EXISTS competitors ( competitorid TEXT PRIMARY KEY NOT NULL, number INTEGER UNIQUE, name TEXT NOT NULL )") // TODO: Add more information about each competing team.
 
 	//Reusing indicator for whether database was just made after all databases are written
 	//TODO these are for testing
 	if errQuery != nil {
-		var teamID, campaignID, eventID, matchID string
+		var teamID, campaignID, eventID string
 		TeamCreate(4415, "epic robotz", "epicevent")
 		dbTeams.QueryRow("SELECT teamid FROM teams").Scan(&teamID)
-		fmt.Println("Team ID:", teamID)
 		CampaignCreate(teamID, "00000000-0000-0000-0000-000000000000", "test")
 		dbCampaigns.QueryRow("SELECT campaignid FROM campaigns WHERE owner='00000000-0000-0000-0000-000000000000'").Scan(&campaignID)
 		CreateEvent(campaignID, "00000000-0000-0000-0000-000000000000", "event", "nowhere", 0, 900000000000)
 		dbCampaigns.QueryRow("SELECT eventid FROM events").Scan(&eventID)
 		CreateMatch(eventID, "00000000-0000-0000-0000-000000000000", 1, true)
-		dbCampaigns.QueryRow("SELECT matchid FROM matches").Scan(&matchID)
-		fmt.Println("Match ID:", matchID)
 		dbTeams.Exec(fmt.Sprintf("UPDATE teams SET schedule='%s' WHERE teamid='%s'", campaignID, teamID))
 	}
 }
@@ -434,32 +432,34 @@ func arrToMatchStruct(arr []string, eventid, agentid string) (*MatchData, error)
 	}
 	matchid, err := matchIDFromNum(intarr[0], eventid)
 	if matchid == "" {
-		return nil, err
+		//TODO figure out if true value on matches is uselful under current system
+		err = CreateMatch(eventid, agentid, intarr[0], true)
+		matchid, err = matchIDFromNum(intarr[0], eventid)
 	}
 	autoLineCross = intarr[3] == 1
-	stageOneComplete = intarr[12] == 1
-	stageTwoComplete = intarr[14] == 1
-	balanced := intarr[20] == 1
+	stageOneComplete = intarr[13] == 1
+	stageTwoComplete = intarr[15] == 1
+	balanced := intarr[21] == 1
 	if intarr[2] == 1 {
 		alliance = "red"
 	} else {
 		alliance = "blue"
 	}
-	if intarr[18] == 1 {
+	if intarr[19] == 1 {
 		card = "yellow"
-	} else if intarr[18] == 2 {
+	} else if intarr[19] == 2 {
 		card = "red"
 	} else {
 		card = "none"
 	}
-	if intarr[19] == 2 {
+	if intarr[20] == 2 {
 		climbed = "climbed"
-	} else if intarr[19] == 1 {
+	} else if intarr[20] == 1 {
 		climbed = "platform"
 	} else {
 		climbed = "none"
 	}
-	return &MatchData{MatchID: matchid, MatchNum: intarr[0], Team: intarr[1], Alliance: alliance, AutoLineCross: autoLineCross, AutoLowBalls: intarr[3], AutoHighBalls: intarr[4], AutoBackBalls: intarr[5], AutoPickups: intarr[6], ShotQuantity: intarr[7], LowFuel: intarr[8], HighFuel: intarr[9], BackFuel: intarr[10], StageOneComplete: stageOneComplete, StageOneTime: intarr[12], StageTwoComplete: stageTwoComplete, StageTwoTime: intarr[14], Fouls: intarr[15], TechFouls: intarr[16], Card: card, Climbed: climbed, Balanced: balanced, ClimbTime: intarr[20], Comments: arr[21]}, nil
+	return &MatchData{MatchID: matchid, MatchNum: intarr[0], Team: intarr[1], Alliance: alliance, AutoLineCross: autoLineCross, AutoLowBalls: intarr[4], AutoHighBalls: intarr[5], AutoBackBalls: intarr[6], AutoShots: intarr[7], AutoPickups: intarr[8], ShotQuantity: intarr[9], LowFuel: intarr[10], HighFuel: intarr[11], BackFuel: intarr[12], StageOneComplete: stageOneComplete, StageOneTime: intarr[14], StageTwoComplete: stageTwoComplete, StageTwoTime: intarr[16], Fouls: intarr[17], TechFouls: intarr[18], Card: card, Climbed: climbed, Balanced: balanced, ClimbTime: intarr[22], Comments: arr[23]}, nil
 }
 
 func convertArrToInts(arr []string) ([]int, error) {
@@ -483,6 +483,46 @@ func escapeText(str string) string {
 
 func unescapeText(str string) string {
 	return strings.ReplaceAll(str, "{singlequote}", "'")
+}
+
+/*
+WritePitData writes a pit data entry along with the images that come with it
+*/
+func WritePitData(arr []string, userID, campaignID string) error {
+	teamNum, err := strconv.Atoi(arr[0])
+	if err != nil {
+		log.Warn(err)
+		return err
+	}
+	competitorID := GetCompetitorID(teamNum)
+	//make new competitor if competitor id doesn't exist
+	if competitorID == "" {
+		CreateCompetitor(teamNum, "")
+		competitorID = GetCompetitorID(teamNum)
+	}
+	pitscoutID := uuid.New().String()
+	cycletime, err := strconv.Atoi(arr[2])
+	if err != nil {
+		log.Warn(err)
+		return err
+	}
+	_, err = dbCampaigns.Exec(fmt.Sprintf("INSERT INTO pitscout VALUES ('%s', '%s', '%s', '%s', '%v', '%s' )", pitscoutID, competitorID, campaignID, arr[1], cycletime, arr[3]))
+	if err != nil {
+		log.Warn(err)
+		return err
+	}
+	//inserts images into seperate table
+	writeImage(competitorID, campaignID, arr[4])
+	return nil
+}
+
+/*
+WriteImage writes a robot image to the database
+*/
+func writeImage(competitorID, campaignid, image string) error {
+	imageid := uuid.New().String()
+	_, err := dbCampaigns.Exec(fmt.Sprintf("INSERT INTO images VALUES ('%s', '%s', '%s', '%s' )", imageid, campaignid, competitorID, image))
+	return err
 }
 
 func matchIDFromNum(num int, eventid string) (string, error) {
@@ -541,6 +581,25 @@ func GetTeamResults(teamNum int, campaignID string) (*[]MatchData, error) {
 }
 
 /*
+GetTeamComments gets all comments for a team at a certain event
+*/
+func GetTeamComments(teamNum int, campaignID string) ([]string, error) {
+	var comment string
+	comments := make([]string, 0)
+	teamID := GetCompetitorID(teamNum)
+	eventID, _ := GetActiveCampaignEvent(campaignID)
+	row, err := dbTeams.Query(fmt.Sprintf("SELECT comments FROM results WHERE competitorid='%s' AND eventid='%s'", teamID, eventID))
+	if err != nil {
+		return comments, err
+	}
+	for row.Next() {
+		row.Scan(&comment)
+		comments = append(comments, comment)
+	}
+	return comments, err
+}
+
+/*
 GetTeamMatchResults gets scouter's data based on a team id for a given match
 */
 func GetTeamMatchResults(teamNum int, matchID string) (*[]MatchData, error) {
@@ -580,6 +639,25 @@ func GetTeamMatches(teamNum int, campaignid string) (*[]MatchData, error) {
 		data = append(data, d)
 	}
 	return &data, nil
+}
+
+/*
+GetTeamImages reads all images for a given team
+*/
+func GetTeamImages(teamNum int, campaignID string) ([]string, error) {
+	var image string
+	images := make([]string, 0)
+	competitorID := GetCompetitorID(teamNum)
+	rows, err := dbCampaigns.Query(fmt.Sprintf("SELECT image FROM images WHERE competitorid='%s' AND campaignid='%s'", competitorID, campaignID))
+	if err != nil {
+		return images, err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		rows.Scan(&image)
+		images = append(images, image)
+	}
+	return images, err
 }
 
 /*
@@ -822,8 +900,11 @@ CreateMatch adds a mach to the match table in the campaign database
 */
 func CreateMatch(eventid, agentid string, num int, active bool) error {
 	matchid := uuid.New().String()
-	dbCampaigns.Exec(fmt.Sprintf("INSERT INTO matches VALUES ( '%s', '%s', '%v', '%v' )", eventid, matchid, num, active))
-	return nil
+	_, err := dbCampaigns.Exec(fmt.Sprintf("INSERT INTO matches VALUES ( '%s', '%s', '%v', '%v' )", matchid, eventid, num, active))
+	if err == nil {
+		log.Infof("Created match #%v for event %s", num, eventid)
+	}
+	return err
 }
 
 /*

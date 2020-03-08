@@ -10,9 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//MatchData struct for receiving json data for matches
-type MatchData struct {
-	Data [][]string `json:"data"`
+//PostData struct for receiving json data for all post functions
+type PostData struct {
+	Data []string `json:"data"`
 }
 
 /*
@@ -34,19 +34,28 @@ func Scout(c *gin.Context) {
 
 //MatchPOST processes and stores scouting data from a match
 func MatchPOST(c *gin.Context) {
-	var data MatchData
+	var data PostData
 	c.ShouldBindJSON(&data)
 	//gets uuid to associate with data
 	userID := auth.CheckLogin(c)
-	//original team id do not steal
-	//testTeamID := "4415epicrobotz"
-	//Put testing team and match ids here from inital print
-	testTeamID := "d17f6f55-f04e-4567-bb1f-5e9db66681ee"
+	//TODO: automatically gets 4415's team id - change in future
+	teamID, _ := db.GetTeamID(4415)
 	if userID != "" {
-		db.StoreMatch(data.Data[0], userID, testTeamID)
+		db.StoreMatch(data.Data, userID, teamID)
 	} else {
 		Forbidden(c)
 	}
 }
 
 //PitPOST processes and stores/updates pit scouting data for a team
+func PitPOST(c *gin.Context) {
+	var data PostData
+	c.ShouldBindJSON(&data)
+	userID := auth.CheckLogin(c)
+	teamID, _ := db.GetTeamID(4415)
+	if userID != "" {
+		db.WritePitData(data.Data, userID, teamID)
+	} else {
+		Forbidden(c)
+	}
+}

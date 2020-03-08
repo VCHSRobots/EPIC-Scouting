@@ -6,6 +6,7 @@ import (
 	"EPIC-Scouting/lib/db"
 	"EPIC-Scouting/lib/web"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,6 +15,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wcharczuk/go-chart"
 )
+
+//Images struct for exporting images
+type Images struct {
+	Images []string `json:"images"`
+}
 
 //Data route for data display
 func Data(c *gin.Context) {
@@ -25,6 +31,8 @@ func Data(c *gin.Context) {
 	} else if querydisplay == "team" {
 		c.HTML(http.StatusOK, "data.tmpl", gin.H{"HeaderData": HeaderData, "TeamOverall": true})
 	} else if querydisplay == "teamprofile" {
+		var build strings.Builder
+		var comments string
 		teamID, _ := db.GetTeamID(team)
 		campaign, _ := db.GetTeamCampaign(teamID)
 		overall := calc.TeamOverall(team, campaign)
@@ -33,7 +41,15 @@ func Data(c *gin.Context) {
 		colorwheel := calc.TeamColorWheel(team, campaign)
 		climbing := calc.TeamClimbing(team, campaign)
 		fouls := calc.TeamFoul(team, campaign)
-		c.HTML(http.StatusOK, "data.tmpl", gin.H{"HeaderData": HeaderData, "TeamProfile": true, "Overall": overall, "Auto": auto, "Shooting": shooting, "ColorWheel": colorwheel, "Climbing": climbing, "Fouls": fouls})
+		commentList, _ := db.GetTeamComments(team, campaign)
+		for ind, comment := range commentList {
+			build.WriteString(comment)
+			if ind != len(commentList)-1 {
+				build.WriteString(", ")
+			}
+		}
+		comments = build.String()
+		c.HTML(http.StatusOK, "data.tmpl", gin.H{"HeaderData": HeaderData, "TeamProfile": true, "Overall": overall, "Auto": auto, "Shooting": shooting, "ColorWheel": colorwheel, "Climbing": climbing, "Fouls": fouls, "Comments": comments})
 	} else {
 		c.HTML(http.StatusOK, "data.tmpl", gin.H{"HeaderData": HeaderData, "none": true})
 	}
@@ -98,7 +114,6 @@ func MatchDataGet(c *gin.Context) {
 		}
 	}
 	csvString = build.String()
-	fmt.Println(csvString)
 	c.String(http.StatusOK, "text", csvString)
 }
 
@@ -143,6 +158,27 @@ func writeCSVString(arr []string) string {
 	return str.String()
 }
 
+/*
+GetMatchHistory gets table with a team's match history
+*/
+func GetMatchHistory(c *gin.Context) {
+
+}
+
+/*
+GetTeamImages gets a team's images
+*/
+func GetTeamImages(c *gin.Context) {
+	var images Images
+	teamID, _ := db.GetTeamID(4415)
+	campaignID, _ := db.GetTeamCampaign(teamID)
+	teamNum, _ := strconv.Atoi(c.Query("team"))
+	imageList, _ := db.GetTeamImages(teamNum, campaignID)
+	images.Images = imageList
+	jsonBytes, _ := json.Marshal(images)
+	c.Data(http.StatusOK, "json", jsonBytes)
+}
+
 //GetGraph gets a graph which responds to querystring parameters
 func GetGraph(c *gin.Context) {
 	var xAxis, yAxis string
@@ -164,7 +200,8 @@ func GetGraph(c *gin.Context) {
 			if ok {
 				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
 			} else {
-				matchGroups[match.MatchNum] = make([]db.MatchData, 0)
+				matchGroups[match.MatchNum] = make([]db.MatchData, 1)
+				matchGroups[match.MatchNum][0] = match
 			}
 		}
 		for matchNum, matches := range matchGroups {
@@ -181,7 +218,8 @@ func GetGraph(c *gin.Context) {
 			if ok {
 				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
 			} else {
-				matchGroups[match.MatchNum] = make([]db.MatchData, 0)
+				matchGroups[match.MatchNum] = make([]db.MatchData, 1)
+				matchGroups[match.MatchNum][0] = match
 			}
 		}
 		for matchNum, matches := range matchGroups {
@@ -198,7 +236,8 @@ func GetGraph(c *gin.Context) {
 			if ok {
 				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
 			} else {
-				matchGroups[match.MatchNum] = make([]db.MatchData, 0)
+				matchGroups[match.MatchNum] = make([]db.MatchData, 1)
+				matchGroups[match.MatchNum][0] = match
 			}
 		}
 		for matchNum, matches := range matchGroups {
@@ -215,15 +254,51 @@ func GetGraph(c *gin.Context) {
 			if ok {
 				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
 			} else {
-				matchGroups[match.MatchNum] = make([]db.MatchData, 0)
+				matchGroups[match.MatchNum] = make([]db.MatchData, 1)
+				matchGroups[match.MatchNum][0] = match
 			}
 		}
 		for matchNum, matches := range matchGroups {
 			x = append(x, float64(matchNum))
 			y = append(y, float64(calc.ColorWheel(matches)))
 		}
+	} else if graphSubject == "Climbing" {
+		xAxis = c.Query("team")
+		yAxis = "Climbing"
+		teamNum, _ := strconv.Atoi(xAxis)
+		matches, _ := db.GetTeamMatches(teamNum, campaign)
+		for _, match := range *matches {
+			_, ok := matchGroups[match.MatchNum]
+			if ok {
+				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
+			} else {
+				matchGroups[match.MatchNum] = make([]db.MatchData, 1)
+				matchGroups[match.MatchNum][0] = match
+			}
+		}
+		for matchNum, matches := range matchGroups {
+			x = append(x, float64(matchNum))
+			y = append(y, float64(calc.Climbing(matches)))
+		}
+	} else if graphSubject == "Fouls" {
+		xAxis = c.Query("team")
+		yAxis = "Fouls"
+		teamNum, _ := strconv.Atoi(xAxis)
+		matches, _ := db.GetTeamMatches(teamNum, campaign)
+		for _, match := range *matches {
+			_, ok := matchGroups[match.MatchNum]
+			if ok {
+				matchGroups[match.MatchNum] = append(matchGroups[match.MatchNum], match)
+			} else {
+				matchGroups[match.MatchNum] = make([]db.MatchData, 1)
+				matchGroups[match.MatchNum][0] = match
+			}
+		}
+		for matchNum, matches := range matchGroups {
+			x = append(x, float64(matchNum))
+			y = append(y, float64(calc.Foul(matches)))
+		}
 	}
-	fmt.Println(x, y)
 	graph := chart.Chart{
 		XAxis: chart.XAxis{
 			Name: xAxis,

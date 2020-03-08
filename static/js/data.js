@@ -9,6 +9,9 @@ function loadData() {
     sortTeamTableBy("datasort");
   } else if (urlParams.get("display")=="match") {
     sortMatchTableBy("datasort");
+  } else if (urlParams.get("display")=="teamprofile") {
+    //sortTeamMatchTableBy("datasort")
+    displayRobotImages();
   }
 }
 
@@ -96,4 +99,15 @@ function showGraph() {
 
 function gotoTeamProfile(team) {
   window.location = "/data?display=teamprofile&team="+String(team);
+}
+
+function displayRobotImages() {
+  var xhttp = new XMLHttpRequest()
+  xhttp.responseType = "json"
+  xhttp.onreadystatechange = function() {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
+    }
+  }
+  xhttp.open("GET", "/getTeamImages")
+  xhttp.send();
 }

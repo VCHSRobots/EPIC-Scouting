@@ -6,13 +6,13 @@
   <input type="text" name="match" value="1"><br>
   <label for="team">Team:</label>
   <input type="text" name="team" value="4415"><br>
+  <label for="alliance">Alliance:</label>
+  Red:<input type="radio" name="alliance" value="1" checked>
+  Blue:<input type="radio" name="alliance" value="0"><br>
   <h2>Autonomous:<br></h2>
   <label for="autoLineCross">Crossed Auto Line?:</label>
   yes:<input type="radio" name="autoLineCross" value="1" checked>
   no:<input type="radio" name="autoLineCross" value="0"><br>
-  <label for="alliance">Crossed Auto Line?:</label>
-  Red:<input type="radio" name="alliance" value="1" checked>
-  Blue:<input type="radio" name="alliance" value="0"><br>
   <label for="autoHighBalls">High Balls:</label>
   <input type="text" name="autoHighBalls" value="0">
   <input type="button" name="ahbinc", value="+" onClick="this.form.autoHighBalls.value++">
@@ -110,15 +110,17 @@
 <p>Enter pit data now!</p>
 <form>
 <label for="team">Team:</label>
-<input type="text" name="team"><br>
+<input type="text" name="team" value="4415"><br>
 <label for="teamname">Team Name:</label>
 <input type="text" name="teamname"><br>
 <label for="cycletime">Cycle Time:</label>
-<input type="text" name="cycletime"><br>
+<input type="text" name="cycletime" value="0">
+<input type="button" name="ctinc", value="+" onClick="this.form.cycletime.value++">
+<input type="button" name="ctdec", value="-" onClick="this.form.cycletime.value--"><br>
 <label for="comments">Comments:</label>
 <input type="text" name="comments"><br>
-<label for="picture">Picture:</label>
-<input type="file" name="picture"><br>
+<label for="image">Picture:</label>
+<input type="file" name="image"><br>
 <input type="button" name="submitButton" value="Submit" onClick="submitPitData(this.form)"><br>
 </form>
 <canvas id="qr"></canvas>

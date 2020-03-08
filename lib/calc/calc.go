@@ -4,7 +4,6 @@ Package calc provides functions for calculating various game statistics.
 package calc
 
 import (
-	"fmt"
 	"math"
 	"sort"
 
@@ -101,7 +100,6 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 	// if len(red) == 0 || len(blue) == 0 {
 	// 	return summary, errors.New("Unable to summarize match: no data provided for one or more alliances")
 	// }
-	fmt.Println(red, blue)
 	summary.MatchNum = red[0].MatchNum
 	participants := db.GetMatchParticipants(red[0].MatchID)
 	summary.RedParticipants = participants[0]
@@ -404,6 +402,9 @@ func TeamAutoBreakdown(teamNum int, campaignID string) []int {
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
 	matches, _ := db.GetTeamResults(teamNum, campaignID)
+	if len(*matches) == 0 {
+		return breakdown
+	}
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		if match.AutoLineCross {
@@ -432,6 +433,9 @@ func TeamShootingBreakdown(teamNum int, campaignid string) []int {
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
 	matches, _ := db.GetTeamResults(teamNum, campaignid)
+	if len(*matches) == 0 {
+		return breakdown
+	}
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		breakdown[0] += match.ShotQuantity
@@ -457,6 +461,9 @@ func TeamClimbingBreakdown(teamNum int, campaignID string) []int {
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
 	matches, _ := db.GetTeamResults(teamNum, campaignID)
+	if len(*matches) == 0 {
+		return breakdown
+	}
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		if match.Climbed == "climbed" {
@@ -483,6 +490,9 @@ func TeamColorWheelBreakdown(teamNum int, campaignID string) []int {
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
 	matches, _ := db.GetTeamResults(teamNum, campaignID)
+	if len(*matches) == 0 {
+		return breakdown
+	}
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		breakdown[0] += match.StageOneTime
@@ -500,6 +510,9 @@ func TeamFoulBreakdown(teamNum int, campaignID string) []int {
 	//matches is a list of the results struct
 	//TODO: Get eventid from active event on the given campaignid
 	matches, _ := db.GetTeamResults(teamNum, campaignID)
+	if len(*matches) == 0 {
+		return breakdown
+	}
 	//totals the scores the team has accumulated over the matches
 	for _, match := range *matches {
 		breakdown[0] += match.Fouls
@@ -520,6 +533,9 @@ func TeamFoulBreakdown(teamNum int, campaignID string) []int {
 
 //Overall gets a teams overall score based off a weight table yet to be implemented
 func Overall(matches []db.MatchData) int {
+	if len(matches) == 0 {
+		return 0
+	}
 	auto := Auto(matches)
 	shooting := Shooting(matches)
 	climbing := Climbing(matches)
@@ -590,6 +606,9 @@ func AutoBreakdown(matches []db.MatchData) []int {
 	breakdown := make([]int, 8)
 	//matches is a list of the results struct
 	//totals the scores the team has accumulated over the matches
+	if len(matches) == 0 {
+		return breakdown
+	}
 	for _, match := range matches {
 		if match.AutoLineCross {
 			breakdown[0]++
@@ -614,6 +633,9 @@ func AutoBreakdown(matches []db.MatchData) []int {
 //ShootingBreakdown gets a team's teleop shooting rate, shooting accuracy, ball score rate, and point score rate
 func ShootingBreakdown(matches []db.MatchData) []int {
 	breakdown := make([]int, 7)
+	if len(matches) == 0 {
+		return breakdown
+	}
 	//matches is a list of the results struct
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
@@ -637,6 +659,9 @@ func ShootingBreakdown(matches []db.MatchData) []int {
 //ClimbingBreakdown gets a team's average climbing speed, ability to balance the bar, and average points scored for climbing
 func ClimbingBreakdown(matches []db.MatchData) []int {
 	breakdown := make([]int, 3)
+	if len(matches) == 0 {
+		return breakdown
+	}
 	//matches is a list of the results struct
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
@@ -661,6 +686,9 @@ func ClimbingBreakdown(matches []db.MatchData) []int {
 //ColorWheelBreakdown gets how quickly a team can do stage 1 and 2 of the color wheel, along with whether they can do it at all
 func ColorWheelBreakdown(matches []db.MatchData) []int {
 	breakdown := make([]int, 2)
+	if len(matches) == 0 {
+		return breakdown
+	}
 	//matches is a list of the results struct
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
@@ -676,6 +704,9 @@ func ColorWheelBreakdown(matches []db.MatchData) []int {
 //FoulBreakdown gets how many times a team has recieved regular fouls, tech fouls, and yellow cards, along with the total amount of points lost by them to fouls
 func FoulBreakdown(matches []db.MatchData) []int {
 	breakdown := make([]int, 4)
+	if len(matches) == 0 {
+		return breakdown
+	}
 	//matches is a list of the results struct
 	//totals the scores the team has accumulated over the matches
 	for _, match := range matches {
