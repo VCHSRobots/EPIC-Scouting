@@ -99,6 +99,7 @@ func start(port int) {
 	router.GET("/data", routes.Data)
 	router.GET("/teamDataGet", routes.TeamDataGet)
 	router.GET("/matchDataGet", routes.MatchDataGet)
+	router.GET("/teamMatchDataGet", routes.TeamMatchDataGet)
 	router.GET("/getTeamImages", routes.GetTeamImages)
 	router.GET("/getGraph", routes.GetGraph)
 	log.Debugf("Serving on port %d.", port)

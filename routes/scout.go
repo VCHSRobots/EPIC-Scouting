@@ -53,8 +53,9 @@ func PitPOST(c *gin.Context) {
 	c.ShouldBindJSON(&data)
 	userID := auth.CheckLogin(c)
 	teamID, _ := db.GetTeamID(4415)
+	campaignID, _ := db.GetTeamCampaign(teamID)
 	if userID != "" {
-		db.WritePitData(data.Data, userID, teamID)
+		db.WritePitData(data.Data, userID, campaignID)
 	} else {
 		Forbidden(c)
 	}

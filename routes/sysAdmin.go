@@ -54,6 +54,9 @@ func SysAdmin(c *gin.Context) {
 	c.HTML(200, "sysAdmin.tmpl", gin.H{"BuildName": BuildName, "BuildDate": BuildDate, "DatabaseSizes": DatabaseSizes, "SysAdmins": SysAdmins, "Users": Users, "Campaigns": Campaigns, "Teams": Teams, "HeaderData": HeaderData})
 }
 
+/*
+SysAdminToggle toggles a user's status as SysAdmin
+*/
 func SysAdminToggle(c *gin.Context) {
 	print(auth.GetUserMode(c))
 	if auth.GetUserMode(c) != "sysadmin" {

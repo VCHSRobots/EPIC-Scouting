@@ -73,8 +73,18 @@
 <p id="climbing">Climbing: {{.Climbing}}</p>
 <p id="fouls">Fouls: {{.Fouls}}</p>
 <h2>Match History</h2>
+<select id="datasort" onChange="sortTeamMatchTable()">
+<option value="Match">Match #</option>
+<option value="Overall">Overall</option>
+<option value="Auto">Teammates</option>
+<option value="Shooting">Autonomous</option>
+<option value="ColorWheel">Shooting</option>
+<option value="Climbing">Color Wheel</option>
+<option value="Fouls">Fouls</option>
+</select>
 <table id="teamdata">
     <tr>
+        <th>Match #</th>
         <th>Overall Performance</th>
         <th>Teammates</th>
         <th>Opponents</th>

@@ -6,11 +6,11 @@ data.js manages tables on the match data display page
 function loadData() {
   var urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("display")=="team") {
-    sortTeamTableBy("datasort");
+    sortTeamTable();
   } else if (urlParams.get("display")=="match") {
-    sortMatchTableBy("datasort");
+    sortMatchTable();
   } else if (urlParams.get("display")=="teamprofile") {
-    //sortTeamMatchTableBy("datasort")
+    sortTeamMatchTable();
     displayRobotImages();
   }
 }
@@ -23,8 +23,8 @@ function clearTable(team) {
 
 //sorts the teams table by the value of the given element
 //preforms sort in backend with GET query
-function sortTeamTableBy(e) {
-  var selector = document.getElementById(e);
+function sortTeamTable() {
+  var selector = document.getElementById("datasort");
   var row = selector.options[selector.selectedIndex].value;
   clearTable("teamdata");
   var xhttp = new XMLHttpRequest();
@@ -48,9 +48,9 @@ function sortTeamTableBy(e) {
   xhttp.send();
 }
 
-function sortMatchTableBy(e) {
+function sortMatchTable() {
   var urlParams = new URLSearchParams(window.location.search);
-  var selector = document.getElementById(e);
+  var selector = document.getElementById("datasort");
   var selected = encodeURIComponent(selector.options[selector.selectedIndex].value);
   var team = encodeURIComponent(urlParams.get("team"));
   clearTable("matchdata");
@@ -72,6 +72,33 @@ function sortMatchTableBy(e) {
     }
   }
   xhttp.open("GET", "/matchDataGet?sortby="+selected+"&team="+team);
+  xhttp.send();
+}
+
+function sortTeamMatchTable() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var selector = document.getElementById("datasort");
+  var selected = encodeURIComponent(selector.options[selector.selectedIndex].value);
+  var team = encodeURIComponent(urlParams.get("team"));
+  clearTable("teamdata");
+  var xhttp = new XMLHttpRequest();
+  xhttp.responseType = "text";
+  xhttp.onreadystatechange = function() {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
+      var txt = this.responseText.slice(20, -1);
+      var rows = Papa.parse(txt).data;
+      var table = document.getElementById("teamdata");
+      for (row in rows) {
+        tablerow = table.insertRow();
+        for (celldata in rows[row]) {
+          innerData = rows[row][celldata];
+          var cell = tablerow.insertCell();
+          cell.innerHTML = innerData;
+        }
+      }
+    }
+  }
+  xhttp.open("GET", "/teamMatchDataGet?sortby="+selected+"&team="+team);
   xhttp.send();
 }
 
@@ -102,12 +129,34 @@ function gotoTeamProfile(team) {
 }
 
 function displayRobotImages() {
-  var xhttp = new XMLHttpRequest()
-  xhttp.responseType = "json"
+  var urlParams = new URLSearchParams(window.location.search);
+  var team = encodeURIComponent(urlParams.get("team"));
+  var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (xhttp.readyState == 4 && xhttp.status == 200) {
+      clearRobotImages();
+      var table = document.getElementById("robotimgs");
+      var text = xhttp.responseText;
+      var images = JSON.parse(text);
+      for (imageString in images) {
+        var imageList = images[imageString];
+        for (image in imageList) {
+          var img = document.createElement("IMG");
+          img.src = imageList[image];
+          var row = table.insertRow();
+          var cell = row.insertCell();
+          cell.appendChild(img);
+        }
+      }
     }
   }
-  xhttp.open("GET", "/getTeamImages")
+  xhttp.open("GET", "/getTeamImages?team="+team);
   xhttp.send();
+}
+
+function clearRobotImages() {
+  var table = document.getElementById("robotimgs");
+  while (table.rows.length > 0) {
+    table.deleteRow(0);
+  }
 }

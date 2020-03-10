@@ -834,6 +834,8 @@ func ResolveDataConflicts(data []db.MatchData) db.MatchData {
 		cardList[ind] = d.Card
 		climbedList[ind] = d.Climbed
 	}
+	resolved.MatchNum = data[0].MatchNum
+	resolved.MatchID = data[0].MatchID
 	resolved.AutoLowBalls = resolveInt(autoLowBallsList)
 	resolved.AutoHighBalls = resolveInt(autoHighBallsList)
 	resolved.AutoBackBalls = resolveInt(autoBackBallsList)
@@ -855,7 +857,6 @@ func ResolveDataConflicts(data []db.MatchData) db.MatchData {
 	resolved.Card = resolveString(cardList)
 	resolved.Climbed = resolveString(climbedList)
 	resolved.Team = data[0].Team
-	resolved.MatchID = data[0].MatchID
 	return resolved
 }
 

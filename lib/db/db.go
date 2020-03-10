@@ -686,7 +686,7 @@ func GetTeamImages(teamNum int, campaignID string) ([]string, error) {
 		return images, err
 	}
 	defer rows.Close()
-	if rows.Next() {
+	for rows.Next() {
 		rows.Scan(&image)
 		images = append(images, image)
 	}
