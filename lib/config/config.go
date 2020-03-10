@@ -12,7 +12,7 @@ import (
 )
 
 var defaultConfigString string = `DatabasePath: /home/USERNAME/database/
-LogLocation: /home/USERNAME/log/`
+LogPath: /home/USERNAME/log/`
 
 var defaultConfig []byte = []byte(defaultConfigString)
 
@@ -24,7 +24,7 @@ func init() {
 			if err != nil {
 				log.Fatal("Unable to create configuration file: " + err.Error())
 			} else {
-				log.Fatal("A new configuration file was created. Enter required values.")
+				log.Fatal("A new configuration file was created. Enter required values.") // TODO: This does not properly use log headers for some reason?
 			}
 		} else {
 			log.Fatal("Unable to read configuration file: " + err.Error())
@@ -46,9 +46,10 @@ type YAML struct {
 /*
 BuildInformation returns the build name and date.
 */
-func BuildInformation() (buildName, buildDate string) {
-	buildName = "Prerelease 0.1" // TODO: Update this with each release. "Prerelease" for development versions, "Release" for production versions.
-	buildDate = "2020.064.2"     // TODO: Update this with each release. External script updates number and it is sourced from an external file. Format: YYYY.DDD.N
+func BuildInformation() (buildName string, buildDate string) {
+	buildName = "Release 0.1" // TODO: Update this with each release. "Prerelease" for development versions, "Release" for production versions.
+	binbd, _ := ioutil.ReadFile(".latest-build")
+	buildDate = string(binbd)
 	return
 }
 

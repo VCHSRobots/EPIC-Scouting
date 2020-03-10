@@ -25,7 +25,7 @@ func Index(c *gin.Context) {
 	buildName, buildDate := config.BuildInformation()
 	build := fmt.Sprintf("%s [%s]", buildName, buildDate)
 	// TODO: Get user status via authentication function.
-	headerData := &web.HeaderData{Title: "Index", StyleSheets: nil}
+	headerData := &web.HeaderData{Title: "Index", StyleSheets: []string{"index"}}
 	data := &indexData{headerData, "guest", build}
 	c.HTML(http.StatusOK, "index.tmpl", data)
 }

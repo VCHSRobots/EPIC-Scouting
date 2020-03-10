@@ -203,7 +203,7 @@ func TouchBase(databasePath string) {
 		dbTeams.QueryRow("SELECT teamid FROM teams").Scan(&teamID)
 		CampaignCreate(teamID, "00000000-0000-0000-0000-000000000000", "test")
 		dbCampaigns.QueryRow("SELECT campaignid FROM campaigns WHERE owner='00000000-0000-0000-0000-000000000000'").Scan(&campaignID)
-		CreateEvent(campaignID, "00000000-0000-0000-0000-000000000000", "event", "nowhere", 0, 900000000000)
+		CreateEvent(campaignID, "00000000-0000-0000-0000-000000000000", "event", "nowhere", 0, 900000)
 		dbCampaigns.QueryRow("SELECT eventid FROM events").Scan(&eventID)
 		CreateMatch(eventID, "00000000-0000-0000-0000-000000000000", 1, true)
 		dbTeams.Exec(fmt.Sprintf("UPDATE teams SET schedule='%s' WHERE teamid='%s'", campaignID, teamID))

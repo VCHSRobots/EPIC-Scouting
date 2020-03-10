@@ -1,6 +1,8 @@
 {{template "header" .HeaderData}}
 <img src="/media/construction.gif"></img>
 <h1>SUPER SECRET SYSADMIN BUNKER</h1>
+<p>Build: {{.BuildName}} <span class="code">{{.BuildDate}}</span></p>
+<p>Important links: <ul><li><a href="https://cloud.digitalocean.com/droplets/183145360/graphs?i=03ecf2&period=hour">DigitalOcean</a></li><li><a href="https://github.com/VCHSRobots/EPIC-Scouting">Git</a></li><li><a href="https://www.youtube.com/watch?v=WPhIvWaNdx4">Music to play if something good happens</a></li><li><a href="https://www.youtube.com/watch?v=8OyBtMPqpNY">Music to play if something bad happens</a></li></ul></p>
 <p>Current database sizes: <ul>{{range .DatabaseSizes}}<li>{{.}}</li>{{end}}</ul></p>
 <br>
 <form action="/toggleSysAdmin" method="post">

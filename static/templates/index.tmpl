@@ -1,9 +1,8 @@
 {{template "header" .HeaderData}}
 <div class="menuBar">
 <p>
-<a href="/about">About</a>{{if ne .UserMode "guest"}} | <a href="/dashboard">Dashboard</a><span style="float: right;"><a href="/logout">Log out</a></span>{{else}}<span style="float: right;"><a href="/register">Register</a> | <a href="/login">Login</a></span>{{end}}
+{{if ne .UserMode "guest"}}<a href="/dashboard">Dashboard</a><span style="float: right;"><a href="/logout">Log out</a></span>{{else}}<span style="float: right;"><a href="/register">Register</a> | <a href="/login">Login</a></span>{{end}}
 </p>
 </div>
-<img src="/media/construction.gif" class="centerimg"></img>
 <p style="position: absolute; bottom: 0;">Build {{.Build}}</p>
 {{template "footer"}}

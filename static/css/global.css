@@ -2,6 +2,7 @@ body {
     background-color: #eceff1;
     font-family: verdana;
     margin: auto;
+    text-align: center;
 }
 
 h1, h2, h3 {
@@ -27,7 +28,7 @@ label {
 }
 
 .code {
-    background-color: #bcbfc0;
+    background-color: #ffffff;
     font-family: monospace;
     font-style: normal;
 }

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"EPIC-Scouting/lib/auth"
+	"EPIC-Scouting/lib/config"
 	"EPIC-Scouting/lib/db"
 	"EPIC-Scouting/lib/web"
 	"fmt"
@@ -20,6 +21,7 @@ func SysAdmin(c *gin.Context) {
 		return
 	}
 	HeaderData := &web.HeaderData{Title: "Super Secret Sysadmin Bunker", StyleSheets: []string{"global"}}
+	BuildName, BuildDate := config.BuildInformation()
 	sizes := db.GetDatabaseSize()
 	var DatabaseSizes []string
 	var totalSize float64 = 0
@@ -49,7 +51,7 @@ func SysAdmin(c *gin.Context) {
 	for id, details := range teamList {
 		Teams = append(Teams, fmt.Sprintf("%s - %s - %s (Scouting match %s at event TODO for campaign TODO)", id, details[0], details[1], details[2]))
 	}
-	c.HTML(200, "sysAdmin.tmpl", gin.H{"DatabaseSizes": DatabaseSizes, "SysAdmins": SysAdmins, "Users": Users, "Campaigns": Campaigns, "Teams": Teams, "HeaderData": HeaderData})
+	c.HTML(200, "sysAdmin.tmpl", gin.H{"BuildName": BuildName, "BuildDate": BuildDate, "DatabaseSizes": DatabaseSizes, "SysAdmins": SysAdmins, "Users": Users, "Campaigns": Campaigns, "Teams": Teams, "HeaderData": HeaderData})
 }
 
 func SysAdminToggle(c *gin.Context) {
