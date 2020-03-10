@@ -102,12 +102,34 @@ function gotoTeamProfile(team) {
 }
 
 function displayRobotImages() {
-  var xhttp = new XMLHttpRequest()
-  xhttp.responseType = "json"
+  var urlParams = new URLSearchParams(window.location.search);
+  var team = encodeURIComponent(urlParams.get("team"));
+  var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (xhttp.readyState == 4 && xhttp.status == 200) {
+      clearRobotImages();
+      var table = document.getElementById("robotimgs");
+      var text = xhttp.responseText;
+      var images = JSON.parse(text);
+      for (imageString in images) {
+        var imageList = images[imageString];
+        for (image in imageList) {
+          var img = document.createElement("IMG");
+          img.src = imageList[image];
+          var row = table.insertRow();
+          var cell = row.insertCell();
+          cell.appendChild(img);
+        }
+      }
     }
   }
-  xhttp.open("GET", "/getTeamImages")
+  xhttp.open("GET", "/getTeamImages?team="+team);
   xhttp.send();
+}
+
+function clearRobotImages() {
+  var table = document.getElementById("robotimgs");
+  while (table.rows.length > 0) {
+    table.deleteRow(0);
+  }
 }
