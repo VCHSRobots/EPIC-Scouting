@@ -117,7 +117,58 @@ func MatchDataGet(c *gin.Context) {
 	c.String(http.StatusOK, "text", csvString)
 }
 
+/*
+TeamMatchDataGet gets match statistics for each match a team participated in
+*/
+func TeamMatchDataGet(c *gin.Context) {
+	var build strings.Builder
+	var csvList []string
+	var csvString, balanced, teammates, opponents string
+	var matchResult db.MatchData
+	var matches []db.MatchData
+	var participants [][]int
+	userTeam, _ := strconv.Atoi(auth.CheckTeam(c))
+	userTeamID, _ := db.GetTeamID(userTeam)
+	campaign, _ := db.GetTeamCampaign(userTeamID)
+	matchIDs := db.ListMatchIDs(campaign)
+	teamNumString := c.Query("team")
+	teamNum, _ := strconv.Atoi(teamNumString)
+	for ind, matchID := range matchIDs {
+		matchResult = calc.ResolveMatchConflicts(teamNum, matchID)
+		matches = []db.MatchData{matchResult}
+		if matchResult.Balanced {
+			balanced = "true"
+		} else {
+			balanced = "false"
+		}
+		participants = db.GetMatchParticipants(matchID)
+		if containsInt(participants[0], teamNum) {
+			teammates = fmt.Sprint(participants[0])
+			opponents = fmt.Sprint(participants[1])
+		} else {
+			teammates = fmt.Sprint(participants[1])
+			opponents = fmt.Sprint(participants[0])
+		}
+		csvList = []string{strconv.Itoa(matchResult.MatchNum), strconv.Itoa(calc.Overall(matches)), teammates, opponents, strconv.Itoa(calc.Shooting(matches)), strconv.Itoa(calc.Auto(matches)), strconv.Itoa(calc.ColorWheel(matches)), matchResult.Climbed, balanced, strconv.Itoa(calc.Foul(matches))}
+		build.WriteString(writeCSVString(csvList))
+		if ind != len(matchIDs)-1 {
+			build.WriteString("\n")
+		}
+	}
+	csvString = build.String()
+	c.String(http.StatusOK, "text", csvString)
+}
+
 func contains(arr []string, val string) bool {
+	for _, x := range arr {
+		if x == val {
+			return true
+		}
+	}
+	return false
+}
+
+func containsInt(arr []int, val int) bool {
 	for _, x := range arr {
 		if x == val {
 			return true
