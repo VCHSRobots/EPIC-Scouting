@@ -66,6 +66,10 @@ func SysAdminToggle(c *gin.Context) {
 	c.Request.ParseForm()
 	id := c.PostForm("toggleSysAdmin")
 	user, _ := db.UserQuery(id)
+	if user == nil {
+		c.Redirect(http.StatusSeeOther, "/sysadmin")
+		return
+	}
 	if user.SysAdmin {
 		db.SysAdminDemote(id)
 	} else {

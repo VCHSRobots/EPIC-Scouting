@@ -33,7 +33,7 @@
   <input type="text" name="autoPickups" value="0">
   <input type="button" name="apinc", value="+" onClick="this.form.autoPickups.value++">
   <input type="button" name="apdec", value="-" onClick="this.form.autoPickups.value--"><br>
-  <label>Teleoperated Mode:<br></label>
+  <h2>Teleoperated Mode:<br></h2>
   <label for="shotQuantity">Shots Taken:</label>
   <input type="text" name="shotQuantity" value="0">
   <input type="button" name="sqinc", value="+" onClick="this.form.shotQuantity.value++">
@@ -50,7 +50,7 @@
   <input type="text" name="backFuel" value="0">
   <input type="button" name="bfinc", value="+" onClick="this.form.backFuel.value++">
   <input type="button" name="bfdec", value="-" onClick="this.form.backFuel.value--"><br>
-  <label>Color Wheel:<br></label>
+  <h2>Color Wheel:<br></h2>
   <label for="stageOneComplete">Completed Stage 1?
   yes:</label>
   <input type="radio" name="stageOneComplete" value="1">
@@ -69,7 +69,7 @@
   <input type="text" name="stageTwoTime" value="0">
   <input type="button" name="stinc", value="+" onClick="this.form.stageTwoTime.value++">
   <input type="button" name="stdec", value="-" onClick="this.form.stageTwoTime.value--"><br>
-  <label>Fouls:<br></label>
+  <h2>Fouls:<br></h2>
   <label for="fouls">Regular Fouls:</label>
   <input type="text" name="fouls" value="0">
   <input type="button" name="finc", value="+" onClick="this.form.fouls.value++">
@@ -78,7 +78,7 @@
   <input type="text" name="techFouls" value="0">
   <input type="button" name="tfinc", value="+" onClick="this.form.techFouls.value++">
   <input type="button" name="tfdec", value="-" onClick="this.form.techFouls.value--"><br>
-  <label for="cards">Cards:<br>
+  <h2>Cards:</h2><br>
   None:</label>
   <input type="radio" name="cards" value="0" checked>
   <label for="cards">Yellow Card:</label>
@@ -97,13 +97,14 @@
   yes: <input type="radio" name="balanced" value="1">
   no: <input type="radio" name="balanced" value="0" checked><br>
   <label for="climbTime">Time:</label>
-  <input type="text" name="climbTime" value="4415">
+  <input type="text" name="climbTime" value="0">
   <input type="button" name="ctinc", value="+" onClick="this.form.climbTime.value++">
   <input type="button" name="ctdec", value="-" onClick="this.form.climbTime.value--"><br>
-  <label for="comments">Comments:<br></label>
+  <h2>Comments:<br></h2>
   <input type="text" name="comments"><br>
   <input type="button" name="submitButton" value="Submit" onClick="submitMatchData(this.form)"><br>
 </form>
+<p id="post_submit"></p>
 <canvas id="qr"></canvas>
 {{end}}
 {{if .PitScout}}

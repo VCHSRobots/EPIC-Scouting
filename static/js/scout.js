@@ -14,10 +14,12 @@ function submitMatchData(form) {
     xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/matchPOST", true);
     xhttp.send(jsonstring);
-  } //else {
+    form.submitButton.disabled = true;
+    document.getElementById("post_submit").innerText = "Submission completed. Reload page to scout again!";
+  } else {
     //If that fails, prepare QR Code
     makeQrCode(csvstring);
-  //}
+  }
 }
 
 function submitPitData(form) {

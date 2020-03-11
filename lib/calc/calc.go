@@ -4,6 +4,7 @@ Package calc provides functions for calculating various game statistics.
 package calc
 
 import (
+	"errors"
 	"math"
 	"sort"
 
@@ -97,9 +98,14 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 	var summary MatchResults
 	var count, redPoints, bluePoints, redRP, blueRP int
 	//TODO this is only commented for testing
-	// if len(red) == 0 || len(blue) == 0 {
-	// 	return summary, errors.New("Unable to summarize match: no data provided for one or more alliances")
-	// }
+	if len(red) == 0 || len(blue) == 0 {
+		if len(red) > 0 {
+			summary.MatchNum = red[0].MatchNum
+		} else if len(blue) > 0 {
+			summary.MatchNum = blue[0].MatchNum
+		}
+		return summary, errors.New("Unable to summarize match: no data provided for one or more alliances")
+	}
 	summary.MatchNum = red[0].MatchNum
 	participants := db.GetMatchParticipants(red[0].MatchID)
 	summary.RedParticipants = participants[0]
@@ -205,30 +211,28 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 	if red[0].StageOneComplete {
 		if red[0].StageTwoComplete {
 			summary.RedShieldStage = 3
-			redPoints += 50
+			redPoints += 30
 			redRP++
 		} else {
 			summary.RedShieldStage = 2
-			redPoints += 30
+			redPoints += 10
 		}
 	} else if summary.RedAutoBalls+summary.RedTeleopShots >= 20 {
 		summary.RedShieldStage = 1
-		redPoints += 10 //???
 	}
 	//TODO uncomment below
-	// if blue[0].StageOneComplete {
-	// 	if blue[0].StageTwoComplete {
-	// 		summary.BlueShieldStage = 3
-	// 		bluePoints += 50
-	// 		blueRP++
-	// 	} else {
-	// 		summary.BlueShieldStage = 2
-	// 		bluePoints += 30
-	// 	}
-	// } else if summary.BlueAutoBalls+summary.BlueTeleopShots >= 20 {
-	// 	summary.BlueShieldStage = 1
-	// 	bluePoints += 10 //???
-	// }
+	if blue[0].StageOneComplete {
+		if blue[0].StageTwoComplete {
+			summary.BlueShieldStage = 3
+			bluePoints += 30
+			blueRP++
+		} else {
+			summary.BlueShieldStage = 2
+			bluePoints += 10
+		}
+	} else if summary.BlueAutoBalls+summary.BlueTeleopShots >= 20 {
+		summary.BlueShieldStage = 1
+	}
 	for _, teamdata := range red {
 		if teamdata.Climbed == "climbed" {
 			summary.RedClimbStatus = append(summary.RedClimbStatus, 2)
@@ -245,7 +249,7 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 		count += 15
 	}
 	//award climbing ranking point if condition met
-	if count >= 60 {
+	if count >= 65 {
 		redRP++
 	}
 	summary.RedClimbPoints = count
@@ -253,22 +257,22 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 	count = 0
 	for _, teamdata := range blue {
 		if teamdata.Climbed == "climbed" {
-			summary.BlueClimbStatus = append(summary.RedClimbStatus, 2)
+			summary.BlueClimbStatus = append(summary.BlueClimbStatus, 2)
 			count += 25
 		} else if teamdata.Climbed == "platform" {
-			summary.BlueClimbStatus = append(summary.RedClimbStatus, 1)
+			summary.BlueClimbStatus = append(summary.BlueClimbStatus, 1)
 			count += 5
 		} else {
-			summary.BlueClimbStatus = append(summary.RedClimbStatus, 0)
+			summary.BlueClimbStatus = append(summary.BlueClimbStatus, 0)
 		}
 	}
 	//TODO uncomment below
-	// if blue[0].Balanced {
-	// 	summary.BlueBalanced = true
-	// 	count += 15
-	// }
+	if blue[0].Balanced {
+		summary.BlueBalanced = true
+		count += 15
+	}
 	//award climbing ranking point if condition met
-	if count >= 60 {
+	if count >= 65 {
 		blueRP++
 	}
 	summary.BlueClimbPoints = count
