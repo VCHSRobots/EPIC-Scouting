@@ -98,18 +98,19 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 	var summary MatchResults
 	var count, redPoints, bluePoints, redRP, blueRP int
 	//TODO this is only commented for testing
-	if len(red) == 0 || len(blue) == 0 {
-		if len(red) > 0 {
-			summary.MatchNum = red[0].MatchNum
-		} else if len(blue) > 0 {
-			summary.MatchNum = blue[0].MatchNum
-		}
+	if len(red) > 0 {
+		summary.MatchNum = red[0].MatchNum
+		participants := db.GetMatchParticipants(red[0].MatchID)
+		summary.RedParticipants = participants[0]
+		summary.BlueParticipants = participants[1]
+	} else if len(blue) > 0 {
+		summary.MatchNum = blue[0].MatchNum
+		participants := db.GetMatchParticipants(blue[0].MatchID)
+		summary.BlueParticipants = participants[0]
+		summary.RedParticipants = participants[1]
+	} else {
 		return summary, errors.New("Unable to summarize match: no data provided for one or more alliances")
 	}
-	summary.MatchNum = red[0].MatchNum
-	participants := db.GetMatchParticipants(red[0].MatchID)
-	summary.RedParticipants = participants[0]
-	summary.BlueParticipants = participants[1]
 	for _, teamdata := range red {
 		if teamdata.AutoLineCross {
 			count++
@@ -208,30 +209,34 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 	count = 0
 	//TODO stage one and two should be stages two and three
 	//TODO update point values for each stage complete
-	if red[0].StageOneComplete {
-		if red[0].StageTwoComplete {
-			summary.RedShieldStage = 3
-			redPoints += 30
-			redRP++
-		} else {
-			summary.RedShieldStage = 2
-			redPoints += 10
+	if len(red) != 0 {
+		if red[0].StageOneComplete {
+			if red[0].StageTwoComplete {
+				summary.RedShieldStage = 3
+				redPoints += 30
+				redRP++
+			} else {
+				summary.RedShieldStage = 2
+				redPoints += 10
+			}
+		} else if summary.RedAutoBalls+summary.RedTeleopShots >= 20 {
+			summary.RedShieldStage = 1
 		}
-	} else if summary.RedAutoBalls+summary.RedTeleopShots >= 20 {
-		summary.RedShieldStage = 1
 	}
 	//TODO uncomment below
-	if blue[0].StageOneComplete {
-		if blue[0].StageTwoComplete {
-			summary.BlueShieldStage = 3
-			bluePoints += 30
-			blueRP++
-		} else {
-			summary.BlueShieldStage = 2
-			bluePoints += 10
+	if len(blue) != 0 {
+		if blue[0].StageOneComplete {
+			if blue[0].StageTwoComplete {
+				summary.BlueShieldStage = 3
+				bluePoints += 30
+				blueRP++
+			} else {
+				summary.BlueShieldStage = 2
+				bluePoints += 10
+			}
+		} else if summary.BlueAutoBalls+summary.BlueTeleopShots >= 20 {
+			summary.BlueShieldStage = 1
 		}
-	} else if summary.BlueAutoBalls+summary.BlueTeleopShots >= 20 {
-		summary.BlueShieldStage = 1
 	}
 	for _, teamdata := range red {
 		if teamdata.Climbed == "climbed" {
@@ -244,9 +249,11 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 			summary.RedClimbStatus = append(summary.RedClimbStatus, 0)
 		}
 	}
-	if red[0].Balanced {
-		summary.RedBalanced = true
-		count += 15
+	if len(red) != 0 {
+		if red[0].Balanced {
+			summary.RedBalanced = true
+			count += 15
+		}
 	}
 	//award climbing ranking point if condition met
 	if count >= 65 {
@@ -267,9 +274,11 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 		}
 	}
 	//TODO uncomment below
-	if blue[0].Balanced {
-		summary.BlueBalanced = true
-		count += 15
+	if len(blue) != 0 {
+		if blue[0].Balanced {
+			summary.BlueBalanced = true
+			count += 15
+		}
 	}
 	//award climbing ranking point if condition met
 	if count >= 65 {
@@ -278,6 +287,15 @@ func deriveMatchScores(red, blue []db.MatchData) (MatchResults, error) {
 	summary.BlueClimbPoints = count
 	bluePoints += count
 	count = 0
+	for _, teamdata := range blue {
+		count += teamdata.Fouls*3 + teamdata.TechFouls*15
+	}
+	redPoints += count
+	count = 0
+	for _, teamdata := range red {
+		count += teamdata.Fouls*3 + teamdata.TechFouls*15
+	}
+	bluePoints += count
 	summary.RedPoints = redPoints
 	summary.BluePoints = bluePoints
 	if redPoints > bluePoints {
